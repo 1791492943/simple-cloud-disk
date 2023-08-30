@@ -1,13 +1,17 @@
 package com.simpleclouddisk.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.common.Result;
-import com.simpleclouddisk.domain.User;
+import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.UserLoginDto;
+import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.exception.ServiceException;
-import com.simpleclouddisk.exception.service.RegisterException;
 import com.simpleclouddisk.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -22,8 +26,9 @@ public class UserController {
      * @param phone
      */
     @GetMapping("/code/{phone}")
-    public void code(@PathVariable String phone) {
+    public Result code(@PathVariable String phone) {
         userService.code(phone);
+        return Result.ok("验证码发送成功");
     }
 
     /**
@@ -32,20 +37,9 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public Result login(@RequestBody User user) throws ServiceException {
-        String login = userService.login(user);
-        return Result.ok(login);
-    }
-
-    /**
-     * 注册
-     * @param user
-     * @return
-     */
-    @PostMapping("/register")
-    public Result register(@RequestBody User user) throws RegisterException {
-        userService.register(user);
-        return Result.ok("注册成功!");
+    public Result login(@RequestBody UserLoginDto user) throws ServiceException {
+        String token = userService.login(user);
+        return Result.ok(token);
     }
 
     /**
@@ -59,4 +53,30 @@ public class UserController {
         return Result.ok("密码设置成功!");
     }
 
+    /**
+     * 查看使用空间
+     * @return
+     */
+    @GetMapping("/space")
+    public Result getSpace(){
+        Map<String,Long> map = userService.getSpace();
+        return Result.ok(map);
+    }
+
+    /**
+     * 分页查看文件列表
+     * @param filePageDto
+     * @return
+     */
+    @GetMapping("/file/page")
+    public Result filePage(FilePageDto filePageDto){
+        Page page = userService.page(filePageDto);
+        return Result.ok(page);
+    }
+
+    @DeleteMapping("/delete/{fileIds}")
+    public Result deleteFileById(@PathVariable Long[] fileIds){
+        userService.deleteFileById(fileIds);
+        return Result.ok("删除成功");
+    }
 }

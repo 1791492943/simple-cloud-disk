@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.simpleclouddisk.mapper.UserMapper">
 
-    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.User">
+    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.entity.User">
             <id property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="name" column="name" jdbcType="VARCHAR"/>
             <result property="email" column="email" jdbcType="VARCHAR"/>
@@ -24,4 +24,7 @@
         create_time,last_time,status,
         use_space,total_space
     </sql>
+    <update id="setSpace">
+        update user set use_space = (use_space + ${size}) where user_id = #{userId}
+    </update>
 </mapper>

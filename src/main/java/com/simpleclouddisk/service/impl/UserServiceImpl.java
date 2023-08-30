@@ -3,27 +3,40 @@ package com.simpleclouddisk.service.impl;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.simpleclouddisk.code.FileCode;
 import com.simpleclouddisk.config.CodeConfig;
 import com.simpleclouddisk.config.PasswordConfig;
-import com.simpleclouddisk.domain.User;
+import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.UserFileDto;
+import com.simpleclouddisk.domain.dto.UserLoginDto;
+import com.simpleclouddisk.domain.entity.User;
+import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
 import com.simpleclouddisk.exception.service.LoginException;
 import com.simpleclouddisk.exception.service.PasswordException;
 import com.simpleclouddisk.exception.service.RegisterException;
+import com.simpleclouddisk.mapper.UserFileMapper;
 import com.simpleclouddisk.service.UserService;
 import com.simpleclouddisk.mapper.UserMapper;
 import com.simpleclouddisk.utils.CaptchaGenerator;
 import com.simpleclouddisk.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.sql.Timestamp;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author Administrator
@@ -39,6 +52,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserFileMapper userFileMapper;
 
     /**
      * 生成短信验证码
@@ -60,27 +76,95 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * 登录
      *
-     * @param user
+     * @param userLoginDto
      */
     @Override
-    public String login(User user) throws ServiceException {
+    public String login(UserLoginDto userLoginDto) throws ServiceException {
+        User user = new User();
+        user.setPhone(userLoginDto.getPhone());
+        user.setPassword(userLoginDto.getPassword());
+
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper
-                .eq(user.getEmail() != null, User::getEmail, user.getEmail())
-                .eq(user.getPhone() != null, User::getPhone, user.getPhone());
+        queryWrapper.eq(User::getPhone, user.getPhone());
         User userInfo = userMapper.selectOne(queryWrapper);
 
-        // 账号不存在
+        // 账号不存在,直接注册
         if (Objects.isNull(userInfo)) {
-            throw new LoginException("账号不存在!");
+            if (userLoginDto.getCode() == null || "".equals(userLoginDto.getCode())) {
+                throw new ServiceException("账号未注册");
+            }
+
+            String redisPhone = RedisUtil.redisPhoneCode(userLoginDto.getPhone());
+            String code = redisTemplate.opsForValue().get(redisPhone);
+            if (!userLoginDto.getCode().equals(code)) {
+                throw new ServiceException("验证码错误");
+            }
+
+            User userRegister = new User();
+            userRegister.setPhone(userLoginDto.getPhone());
+
+            userMapper.insert(userRegister);
+            StpUtil.login(userRegister.getUserId());
+            String token = StpUtil.getTokenValue();
+
+            redisTemplate.opsForValue().getOperations().delete(redisPhone);
+            return token;
         }
 
-        // 验证码登录
-        String redisPhone = RedisUtil.redisPhoneCode(userInfo.getPhone());
-        String code = redisTemplate.opsForValue().get(redisPhone);
-        if(user.getPassword().equals(code)){
+        if (userLoginDto.getCode() != null && !"".equals(userLoginDto.getCode())) {
+            // 验证码登录
+            String redisPhone = RedisUtil.redisPhoneCode(userInfo.getPhone());
+            String code = redisTemplate.opsForValue().get(redisPhone);
+            if (userLoginDto.getCode() != null && userLoginDto.getCode().equals(code)) {
+                StpUtil.login(userInfo.getUserId());
+                String token = StpUtil.getTokenValue();
+
+                // 设置最后登录时间
+                userInfo.setLastTime(new Timestamp(System.currentTimeMillis()));
+                this.updateById(userInfo);
+
+                redisTemplate.opsForValue().getOperations().delete(redisPhone);
+                return token;
+            }
+        } else if (userLoginDto.getPassword() != null && !"".equals(userLoginDto.getPassword())) {
+            // 密码登录
+            // 密码错误
+            if (!BCrypt.checkpw(user.getPassword(), userInfo.getPassword())) {
+                // 查询 redis 密码错误次数
+                String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
+                String count = redisTemplate.opsForValue().get(redisUserId);
+
+                if ("-1".equals(count)) {
+                    throw new ServiceException("账号已被锁定,请等待 " + redisTemplate.opsForValue().getOperations().getExpire(redisUserId) + " 秒后再次尝试");
+                }
+
+                // 第一次密码错误
+                if (Objects.isNull(count)) {
+                    // 密码错误累加
+                    redisTemplate.opsForValue().set(redisUserId, "1", PasswordConfig.TIME, TimeUnit.MINUTES);
+                    throw new PasswordException("密码错误,你还有 " + (PasswordConfig.COUNT - 1) + " 次机会");
+                }
+
+                // 多次密码错误
+                int countAdd = Integer.parseInt(count) + 1;
+                // 密码错误次数达到上限 锁定10分钟 -1 表示上限
+                if (countAdd == PasswordConfig.COUNT) {
+                    redisTemplate.opsForValue().set(redisUserId, "-1", PasswordConfig.TIME, TimeUnit.MINUTES);
+                    throw new PasswordException("账号已被锁定 " + PasswordConfig.TIME + " 分钟");
+                }
+                // 密码错误没有达到上限 次数加 1
+                redisTemplate.opsForValue().set(redisUserId, String.valueOf(countAdd), PasswordConfig.TIME, TimeUnit.MINUTES);
+                throw new PasswordException("密码错误,你还有 " + (PasswordConfig.COUNT - countAdd) + " 次机会");
+
+            }
+
+            // 登录成功
             StpUtil.login(userInfo.getUserId());
             String token = StpUtil.getTokenValue();
+
+            // 清空密码累计次数
+            String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
+            redisTemplate.opsForValue().set(redisUserId, "0");
 
             // 设置最后登录时间
             userInfo.setLastTime(new Timestamp(System.currentTimeMillis()));
@@ -88,73 +172,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             return token;
         }
-
-        // 密码错误
-        if (!BCrypt.checkpw(user.getPassword(), userInfo.getPassword())) {
-            // 查询 redis 密码错误次数
-            String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
-            String count = redisTemplate.opsForValue().get(redisUserId);
-
-            if("-1".equals(count)){
-                throw new ServiceException("账号已被锁定,请等待 " + redisTemplate.opsForValue().getOperations().getExpire(redisUserId) + " 秒后再次尝试");
-            }
-
-            // 第一次密码错误
-            if (Objects.isNull(count)) {
-                // 密码错误永久累加
-                redisTemplate.opsForValue().set(redisUserId, "1");
-                throw new PasswordException("密码错误,你还有 " + (PasswordConfig.COUNT - 1) + " 次机会");
-            }
-
-            // 多次密码错误
-            int countAdd = Integer.parseInt(count) + 1;
-            // 密码错误次数达到上限 锁定10分钟 -1 表示上限
-            if(countAdd == PasswordConfig.COUNT){
-                redisTemplate.opsForValue().set(redisUserId, "-1", PasswordConfig.TIME, TimeUnit.MINUTES);
-                throw new PasswordException("账号已被锁定 " + PasswordConfig.TIME + " 分钟");
-            }
-            // 密码错误没有达到上限 次数加 1
-            redisTemplate.opsForValue().set(redisUserId, String.valueOf(countAdd));
-            throw new PasswordException("密码错误,你还有 " + (PasswordConfig.COUNT - countAdd) + " 次机会");
-
-        }
-
-        // 登录成功
-        StpUtil.login(userInfo.getUserId());
-        String token = StpUtil.getTokenValue();
-
-        // 清空密码累计次数
-        String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
-        redisTemplate.opsForValue().set(redisUserId,"0");
-
-        // 设置最后登录时间
-        userInfo.setLastTime(new Timestamp(System.currentTimeMillis()));
-        this.updateById(userInfo);
-
-        return token;
-    }
-
-    /**
-     * 注册
-     *
-     * @param user
-     */
-    @Override
-    public void register(User user) throws RegisterException {
-        String code = redisTemplate.opsForValue().get(RedisUtil.redisPhoneCode(user.getPhone()));
-        String password = user.getPassword();
-        if(!password.equals(code)){
-            throw new RegisterException("验证码错误!");
-        }
-        // 添加注册时间
-        user.setCreateTime(new Timestamp(System.currentTimeMillis()));
-        // 密码设置为空
-        user.setPassword(null);
-        this.save(user);
+        return null;
     }
 
     /**
      * 修改密码
+     *
      * @param user
      */
     @Override
@@ -163,7 +186,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 只有在密码为空 (没有设置过密码) 时,才能直接设置密码
         User user1 = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUserId, userId));
-        if(Objects.nonNull(user1.getPassword())){
+        if (Objects.nonNull(user1.getPassword())) {
             throw new ServiceException("密码已设置过,要修改密码请通过修改密码进入");
         }
 
@@ -176,6 +199,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         userInfo.setPassword(hashpw);
         this.updateById(userInfo);
+    }
+
+    @Override
+    public Map<String, Long> getSpace() {
+        Long loginId = StpUtil.getLoginIdAsLong();
+        User user = userMapper.selectById(loginId);
+        Map<String, Long> map = new HashMap<>();
+        map.put("use", user.getUseSpace());
+        map.put("total", user.getTotalSpace());
+        return map;
+    }
+
+    @Override
+    public Page page(FilePageDto filePageDto) {
+        Page<UserFile> page = new Page<>(filePageDto.getPageNum(), filePageDto.getPageSize());
+        Page<UserFile> userFilePage = userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, StpUtil.getLoginIdAsLong()).eq(UserFile::getFilePid, filePageDto.getPid()));
+
+        Page<UserFileDto> userFileDtoPage = new Page<>();
+        BeanUtils.copyProperties(userFilePage,userFileDtoPage,"records");
+
+        List<UserFileDto> collect = userFilePage.getRecords()
+                .stream()
+                .map(item -> new UserFileDto(item))
+                .collect(Collectors.toList());
+
+        userFileDtoPage.setRecords(collect);
+        return userFileDtoPage;
+    }
+
+    @Override
+    public void deleteFileById(Long[] fileIds) {
+        long userId = StpUtil.getLoginIdAsLong();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        UserFile userFile = new UserFile();
+        userFile.setRecoveryTime(timestamp);
+        userFile.setDelFlag(FileCode.DEL_YES);
+
+        userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getFileId, fileIds));
     }
 }
 

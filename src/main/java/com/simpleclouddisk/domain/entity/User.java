@@ -1,4 +1,4 @@
-package com.simpleclouddisk.domain;
+package com.simpleclouddisk.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

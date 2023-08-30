@@ -1,11 +1,14 @@
 package com.simpleclouddisk.service;
 
-import com.simpleclouddisk.domain.User;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.UserLoginDto;
+import com.simpleclouddisk.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.simpleclouddisk.exception.ServiceException;
-import com.simpleclouddisk.exception.service.LoginException;
-import com.simpleclouddisk.exception.service.PasswordException;
 import com.simpleclouddisk.exception.service.RegisterException;
+
+import java.util.Map;
 
 /**
 * @author Administrator
@@ -24,17 +27,18 @@ public interface UserService extends IService<User> {
      * 登录
      * @param user
      */
-    String login(User user) throws ServiceException;
-
-    /**
-     * 注册
-     * @param user
-     */
-    void register(User user) throws RegisterException;
+    String login(UserLoginDto user) throws ServiceException;
 
     /**
      * 修改密码
      * @param user
      */
     void updatePassword(User user) throws ServiceException;
+
+    Map<String, Long> getSpace();
+
+
+    Page page(FilePageDto filePageDto);
+
+    void deleteFileById(Long[] fileIds);
 }

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.simpleclouddisk.mapper.FileInfoMapper">
+<mapper namespace="com.simpleclouddisk.mapper.FileMapper">
 
-    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.FileInfo">
+    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.entity.FileInfo">
             <id property="fileId" column="file_id" jdbcType="BIGINT"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="fileMd5" column="file_md5" jdbcType="VARCHAR"/>

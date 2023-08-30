@@ -1,10 +1,15 @@
 package com.simpleclouddisk;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 @SpringBootTest
 public class Test1 {
@@ -17,5 +22,14 @@ public class Test1 {
         Long expire = redisTemplate.opsForValue().getOperations().getExpire("phone-code: 1688408149066895362");
         System.out.println(expire);
     }
+
+    @Test
+    void md5() throws IOException {
+        File file = new File("E:\\视频\\游戏\\Crossfire\\Crossfire 2023.07.15 - 08.55.23.03.DVR.mp4");
+        InputStream inputStream = new FileInputStream(file);
+        String s = DigestUtils.md5Hex(inputStream);
+        System.out.println(s);
+    }
+
 
 }

@@ -1,20 +1,34 @@
-package com.simpleclouddisk.domain;
+package com.simpleclouddisk.domain.entity;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
-import java.io.Serializable;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @TableName file_info
  */
 @TableName(value = "file_info")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class FileInfo implements Serializable {
     /**
      * 文件id
@@ -23,19 +37,9 @@ public class FileInfo implements Serializable {
     private Long fileId;
 
     /**
-     * 用户id
-     */
-    private Long userId;
-
-    /**
      * 文件md5
      */
     private String fileMd5;
-
-    /**
-     * 父级id
-     */
-    private Long filePid;
 
     /**
      * 文件大小
@@ -53,17 +57,6 @@ public class FileInfo implements Serializable {
     private String fileCover;
 
     /**
-     * 文件路径
-     */
-    private String filePath;
-
-    /**
-     * 0: 目录
-     * 1: 文件
-     */
-    private Integer folderType;
-
-    /**
      * 1: 视频
      * 2: 音频
      * 3: 图片
@@ -73,46 +66,14 @@ public class FileInfo implements Serializable {
     private Integer fileCategory;
 
     /**
-     * 1: 视频
-     * 2: 音频
-     * 3: 图片
-     * 4: pdf
-     * 5: doc
-     * 6: excel
-     * 7: txt
-     * 8: code
-     * 9: zip
-     * 10: 其他
-     */
-    private Integer fileType;
-
-    /**
-     * 0: 转码中
-     * 1: 转码失败
-     * 2: 转码成功
-     */
-    private Integer status;
-
-    /**
-     *
-     */
-    private Date recoveryTime;
-
-    /**
-     * 0: 正常
-     * 1: 回收站
-     */
-    private Integer delFlag;
-
-    /**
      * 创建时间
      */
-    private Date createTime;
+    private Timestamp createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private Timestamp updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

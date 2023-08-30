@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleclouddisk.mapper.UserFileMapper">
+
+    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.entity.UserFile">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+            <result property="filePid" column="file_pid" jdbcType="BIGINT"/>
+            <result property="recoveryTime" column="recovery_time" jdbcType="TIMESTAMP"/>
+            <result property="folderType" column="folder_type" jdbcType="TINYINT"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,file_id,
+        file_pid,recovery_time,folder_type,
+        del_flag,create_time,update_time
+    </sql>
+</mapper>

@@ -1,6 +1,5 @@
 package com.simpleclouddisk.exception;
 
-import cn.dev33.satoken.exception.NotLoginException;
 import com.simpleclouddisk.common.Result;
 import com.simpleclouddisk.exception.service.SpaceException;
 import com.simpleclouddisk.utils.HttpCode;

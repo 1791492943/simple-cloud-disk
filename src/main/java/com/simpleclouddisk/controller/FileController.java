@@ -1,12 +1,9 @@
 package com.simpleclouddisk.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.common.Result;
-import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.FileSecondsPassDto;
 import com.simpleclouddisk.domain.dto.FileShardDto;
-import com.simpleclouddisk.domain.entity.FileShard;
 import com.simpleclouddisk.exception.service.SpaceException;
 import com.simpleclouddisk.service.FileService;
 import com.simpleclouddisk.service.UserFileService;

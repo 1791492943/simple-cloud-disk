@@ -1,7 +1,6 @@
 package com.simpleclouddisk.service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public interface PreviewService {

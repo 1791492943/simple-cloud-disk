@@ -6,7 +6,6 @@ import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.simpleclouddisk.exception.ServiceException;
-import com.simpleclouddisk.exception.service.RegisterException;
 
 import java.util.Map;
 

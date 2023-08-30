@@ -1,11 +1,7 @@
 package com.simpleclouddisk.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.simpleclouddisk.domain.dto.FilePageDto;
-import com.simpleclouddisk.domain.dto.FileShardDto;
 import com.simpleclouddisk.domain.entity.FileInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.simpleclouddisk.domain.entity.FileShard;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.OutputStream;

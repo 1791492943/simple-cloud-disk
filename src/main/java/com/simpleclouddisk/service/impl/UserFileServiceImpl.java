@@ -8,7 +8,6 @@ import com.simpleclouddisk.domain.dto.FileSecondsPassDto;
 import com.simpleclouddisk.domain.entity.FileInfo;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.domain.entity.UserFile;
-import com.simpleclouddisk.exception.ServiceException;
 import com.simpleclouddisk.exception.service.SpaceException;
 import com.simpleclouddisk.mapper.FileMapper;
 import com.simpleclouddisk.mapper.UserMapper;

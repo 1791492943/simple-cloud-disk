@@ -1,20 +1,11 @@
 package com.simpleclouddisk.domain.entity;
 
-import cn.hutool.core.date.LocalDateTimeUtil;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

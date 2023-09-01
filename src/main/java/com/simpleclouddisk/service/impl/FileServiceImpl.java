@@ -116,7 +116,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             if(FileTypeUtil.isImageFile(fileShardDto.getSuffixName())){
                 // 图片
                 File outputThumbnailFile = new File( MinioConfig.thumbnail + "/" + fileShardDto.getFileMd5() + ".jpg"); // 缩略图输出路径
-                // 生成缩略图，设置大小为 100x100 像素
+                // 生成缩略图，设置大小为 30x30 像素
                 Thumbnails.of(temporaryFile)
                         .size(30, 30)
                         .toFile(outputThumbnailFile);

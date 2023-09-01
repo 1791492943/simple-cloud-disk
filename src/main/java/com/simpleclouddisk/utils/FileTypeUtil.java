@@ -1,5 +1,8 @@
 package com.simpleclouddisk.utils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +45,21 @@ public class FileTypeUtil {
             return videoExtensions.contains(extension);
         }
         return false;
+    }
+
+    public static double getVideoDuration(String videoPath) {
+        String ffprobeCommand = String.format("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %s", videoPath);
+
+        try {
+            Process process = Runtime.getRuntime().exec(ffprobeCommand);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String durationStr = reader.readLine();
+            process.waitFor();
+            return Double.parseDouble(durationStr);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
 }

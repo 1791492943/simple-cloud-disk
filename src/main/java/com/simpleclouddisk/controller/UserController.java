@@ -7,10 +7,13 @@ import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.exception.ServiceException;
+import com.simpleclouddisk.service.UserFileService;
 import com.simpleclouddisk.service.UserService;
+import com.simpleclouddisk.utils.UserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Map;
 
 @RestController
@@ -20,6 +23,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserFileService userFileService;
 
     /**
      * 生成短信验证码
@@ -74,9 +80,37 @@ public class UserController {
         return Result.ok(page);
     }
 
+    /**
+     * 删除文件(回收站)
+     * @param fileIds
+     * @return
+     */
     @DeleteMapping("/delete/{fileIds}")
     public Result deleteFileById(@PathVariable Long[] fileIds){
         userService.deleteFileById(fileIds);
         return Result.ok("删除成功");
+    }
+
+    /**
+     * 删除文件(真)
+     * @param fileIds
+     * @return
+     */
+    @DeleteMapping("/remove/{fileIds}")
+    public Result deleteFileInfoById(@PathVariable Long[] fileIds){
+        userService.deleteFileInfoById(Arrays.asList(fileIds));
+        return Result.ok("删除成功");
+    }
+
+    /**
+     * 修改文件名
+     * @param id
+     * @param fileName
+     * @return
+     */
+    @PutMapping("/rename/{id}/{fileName}")
+    public Result rename( @PathVariable Long id, @PathVariable String fileName){
+        userService.rename(id,fileName);
+        return Result.ok("修改成功");
     }
 }

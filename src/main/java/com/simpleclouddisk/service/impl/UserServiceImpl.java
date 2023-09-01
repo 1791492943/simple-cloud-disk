@@ -3,6 +3,7 @@ package com.simpleclouddisk.service.impl;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.simpleclouddisk.code.FileCode;
@@ -11,15 +12,18 @@ import com.simpleclouddisk.config.PasswordConfig;
 import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
+import com.simpleclouddisk.domain.entity.FileInfo;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
 import com.simpleclouddisk.exception.service.PasswordException;
+import com.simpleclouddisk.mapper.FileMapper;
 import com.simpleclouddisk.mapper.UserFileMapper;
 import com.simpleclouddisk.service.UserService;
 import com.simpleclouddisk.mapper.UserMapper;
 import com.simpleclouddisk.utils.CaptchaGenerator;
 import com.simpleclouddisk.utils.RedisUtil;
+import com.simpleclouddisk.utils.UserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +31,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private UserFileMapper userFileMapper;
+
+    @Autowired
+    private FileMapper fileMapper;
 
     /**
      * 生成短信验证码
@@ -210,7 +214,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Page page(FilePageDto filePageDto) {
         Page<UserFile> page = new Page<>(filePageDto.getPageNum(), filePageDto.getPageSize());
-        Page<UserFile> userFilePage = userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, StpUtil.getLoginIdAsLong()).eq(UserFile::getFilePid, filePageDto.getPid()));
+        Page<UserFile> userFilePage = userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
+                .eq(UserFile::getFilePid, filePageDto.getPid())
+                .eq(UserFile::getDelFlag,filePageDto.getDel()));
 
         Page<UserFileDto> userFileDtoPage = new Page<>();
         BeanUtils.copyProperties(userFilePage,userFileDtoPage,"records");
@@ -232,8 +239,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserFile userFile = new UserFile();
         userFile.setRecoveryTime(timestamp);
         userFile.setDelFlag(FileCode.DEL_YES);
-
         userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getFileId, fileIds));
+    }
+
+    @Override
+    public void rename(Long id, String fileName) {
+        // 当前操作人,判断是否是文件主人
+        Long userId = UserUtil.getUserId();
+
+        // 设置属性
+        UserFile userFile = new UserFile();
+        userFile.setId(id);
+        userFile.setFileName(fileName);
+
+        userFileMapper.update(userFile,new LambdaUpdateWrapper<UserFile>()
+                .set(UserFile::getFileName,fileName)
+                .eq(UserFile::getId,id)
+                .eq(UserFile::getUserId,userId));
+    }
+
+    @Override
+    public void deleteFileInfoById(List<Long> list) {
+        long userId = StpUtil.getLoginIdAsLong();
+        userFileMapper.delete(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId,userId).in(UserFile::getFileId,list));
+        List<FileInfo> fileInfos = fileMapper.selectBatchIds(list);
+
+        long space = 0;
+        for (FileInfo fileInfo : fileInfos) {
+            space += fileInfo.getFileSize();
+        }
+
+        userMapper.setSpace(userId,space * -1);
     }
 }
 

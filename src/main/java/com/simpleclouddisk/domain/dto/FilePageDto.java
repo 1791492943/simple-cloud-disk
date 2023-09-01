@@ -25,4 +25,6 @@ public class FilePageDto {
     @Max(value = 100)
     private Integer pageSize;
 
+    private Integer del;
+
 }

@@ -7,6 +7,7 @@ import com.simpleclouddisk.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.simpleclouddisk.exception.ServiceException;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,4 +41,9 @@ public interface UserService extends IService<User> {
     Page page(FilePageDto filePageDto);
 
     void deleteFileById(Long[] fileIds);
+
+    void rename(Long id, String fileName);
+
+    void deleteFileInfoById(List<Long> list);
+
 }

@@ -22,10 +22,9 @@ public interface FileService extends IService<FileInfo> {
 
     /**
      * 在线预览
-     * @param fileName
      * @throws Exception
      */
-    String preview(String fileName) throws Exception;
+    String preview(Long fileId) throws Exception;
 
     /**
      * 删除文件

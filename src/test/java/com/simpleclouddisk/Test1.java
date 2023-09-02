@@ -1,5 +1,6 @@
 package com.simpleclouddisk;
 
+import cn.dev33.satoken.secure.BCrypt;
 import com.mysql.cj.log.Log;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Test;
@@ -37,5 +38,12 @@ public class Test1 {
         System.out.println(s);
     }
 
+    @Test
+    void password() throws IOException {
+        String hashpw = BCrypt.hashpw("123456");
+        System.out.println(hashpw);
+        boolean bool = BCrypt.checkpw("123456", "$2a$10$DdnrBCKBl2Pjz8snpU8LNOmOOovHV95rm6oXIX7LhMDa7hwug9IFK");
+        System.out.println(bool);
+    }
 
 }

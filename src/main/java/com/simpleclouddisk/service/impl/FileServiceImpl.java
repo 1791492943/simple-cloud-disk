@@ -110,9 +110,10 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             outputStream.close();
 
             // 上传minio
-            MinioUtil.upload(temporaryFile, fileShardDto.getSuffixName());
+            String fileMinioName = MinioUtil.upload(temporaryFile, fileShardDto.getSuffixName());
 
-            int fileType = 5;
+            int fileType = FileCode.CATEGORY_OTHER;
+            // 图片
             if(FileTypeUtil.isImageFile(fileShardDto.getSuffixName())){
                 // 图片
                 File outputThumbnailFile = new File( MinioConfig.thumbnail + "/" + fileShardDto.getFileMd5() + ".jpg"); // 缩略图输出路径
@@ -120,7 +121,15 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
                 Thumbnails.of(temporaryFile)
                         .size(30, 30)
                         .toFile(outputThumbnailFile);
-                fileType = 3;
+                fileType = FileCode.CATEGORY_IMAGE;
+            }
+            // 音乐
+            if(FileTypeUtil.isMusicFile(fileShardDto.getSuffixName())){
+                fileType = FileCode.CATEGORY_AUDIO;
+            }
+            // 视频
+            if(FileTypeUtil.isVideoFile(fileShardDto.getSuffixName())){
+                fileType = FileCode.CATEGORY_VIDEO;
             }
 
             // 保存信息
@@ -128,7 +137,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             FileInfo fileInfo = FileInfo.builder()
                     .fileMd5(fileShardDto.getFileMd5())
                     .fileSize(temporaryFile.length())
-                    .fileName(temporaryFile.getName())
+                    .fileName(fileMinioName)
                     .fileCover(fileShardDto.getFileMd5() + ".jpg")
                     .fileCategory(fileType)
                     .createTime(timestamp)
@@ -144,6 +153,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
                     .fileName(fileShardDto.getFileName())
                     .filePid(fileShardDto.getFilePid())
                     .folderType(FileCode.TYPE_FILE)
+                    .fileSize(file.getSize())
                     .delFlag(FileCode.DEL_NO)
                     .createTime(timestamp)
                     .updateTime(timestamp)
@@ -163,11 +173,12 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
     /**
      * 在线预览
      *
-     * @param fileName
      * @throws Exception
      */
     @Override
-    public String preview(String fileName) throws Exception {
+    public String preview(Long fileId) throws Exception {
+        FileInfo fileInfo = fileMapper.selectById(fileId);
+        String fileName = fileInfo.getFileName();
         return MinioUtil.preview(fileName);
     }
 

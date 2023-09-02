@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -68,14 +69,18 @@ public class FileController {
 
     /**
      * 在线预览
-     * @param fileName
      * @return
      * @throws Exception
      */
-    @GetMapping("/preview/{fileName}")
-    public Result preview(@PathVariable String fileName) throws Exception {
-        String url = fileService.preview(fileName);
-        return Result.ok(url);
+    @GetMapping("/preview/{fileId}")
+    public Result preview(@PathVariable Long fileId) throws Exception {
+        String url = fileService.preview(fileId);
+        Integer type = fileService.getById(fileId).getFileCategory();
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("url",url);
+        map.put("type",type);
+        return Result.ok(map);
     }
 
     /**

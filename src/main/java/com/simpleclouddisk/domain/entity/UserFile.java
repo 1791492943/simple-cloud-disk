@@ -53,6 +53,11 @@ public class UserFile implements Serializable {
     private Long filePid;
 
     /**
+     * 文件大小
+     */
+    private Long fileSize;
+
+    /**
      * 进入回收站时间
      */
     private Timestamp recoveryTime;

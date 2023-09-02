@@ -129,6 +129,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else if (userLoginDto.getPassword() != null && !"".equals(userLoginDto.getPassword())) {
             // 密码登录
             // 密码错误
+            System.out.println(BCrypt.checkpw(user.getPassword(), userInfo.getPassword()));
             if (!BCrypt.checkpw(user.getPassword(), userInfo.getPassword())) {
                 // 查询 redis 密码错误次数
                 String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
@@ -239,7 +240,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserFile userFile = new UserFile();
         userFile.setRecoveryTime(timestamp);
         userFile.setDelFlag(FileCode.DEL_YES);
-        userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getFileId, fileIds));
+        userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
     }
 
     @Override
@@ -261,14 +262,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public void deleteFileInfoById(List<Long> list) {
         long userId = StpUtil.getLoginIdAsLong();
-        userFileMapper.delete(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId,userId).in(UserFile::getFileId,list));
-        List<FileInfo> fileInfos = fileMapper.selectBatchIds(list);
 
+        LambdaQueryWrapper<UserFile> queryWrapper = new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, list);
+
+        // 查询文件信息
+        List<UserFile> userFiles = userFileMapper.selectList(queryWrapper);
+
+        // 计算空间
         long space = 0;
-        for (FileInfo fileInfo : fileInfos) {
+        for (UserFile fileInfo : userFiles) {
             space += fileInfo.getFileSize();
         }
 
+        // 删除信息
+        userFileMapper.delete(queryWrapper);
+
+        // 释放空间
         userMapper.setSpace(userId,space * -1);
     }
 }

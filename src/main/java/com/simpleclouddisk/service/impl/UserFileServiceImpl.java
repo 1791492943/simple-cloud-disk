@@ -45,6 +45,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                 .fileName(fileSecondsPassDto.getFileName())
                 .minioName(fileSecondsPassDto.getMinioName())
                 .folderType(FileCode.TYPE_FILE)
+                .fileSize(fileInfo.getFileSize())
                 .delFlag(FileCode.DEL_NO)
                 .createTime(timestamp)
                 .updateTime(timestamp)

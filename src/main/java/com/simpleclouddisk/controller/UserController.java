@@ -1,9 +1,11 @@
 package com.simpleclouddisk.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.common.Result;
 import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.exception.ServiceException;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -46,6 +49,15 @@ public class UserController {
     public Result login(@RequestBody UserLoginDto user) throws ServiceException {
         String token = userService.login(user);
         return Result.ok(token);
+    }
+
+    /**
+     * 获取当前登陆人id
+     * @return
+     */
+    @GetMapping("/id")
+    public Result getUserId(){
+        return Result.ok(StpUtil.getLoginIdAsString());
     }
 
     /**
@@ -112,5 +124,15 @@ public class UserController {
     public Result rename( @PathVariable Long id, @PathVariable String fileName){
         userService.rename(id,fileName);
         return Result.ok("修改成功");
+    }
+
+    /**
+     * 未完成的上传任务
+     * @return
+     */
+    @GetMapping("/uploadInfo")
+    public Result uploadInfo(){
+        List<UploadRecordsDto> list = userService.uploadInfo();
+        return Result.ok(list);
     }
 }

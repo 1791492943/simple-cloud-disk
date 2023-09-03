@@ -20,4 +20,10 @@
         total_shards,last,file_md5,
         shard_md5,create_time
     </sql>
+    <select id="uploadProgress" resultType="com.simpleclouddisk.domain.dto.UploadRecordsDto">
+        SELECT file_md5, file_name, total_shards, COUNT(*) as count
+        FROM file_shard
+        WHERE user_id = #{userId}
+        GROUP BY file_md5, file_name, total_shards
+    </select>
 </mapper>

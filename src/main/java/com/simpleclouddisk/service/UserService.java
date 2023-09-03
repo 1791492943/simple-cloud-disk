@@ -2,6 +2,7 @@ package com.simpleclouddisk.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -46,4 +47,5 @@ public interface UserService extends IService<User> {
 
     void deleteFileInfoById(List<Long> list);
 
+    List<UploadRecordsDto> uploadInfo();
 }

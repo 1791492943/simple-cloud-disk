@@ -1,8 +1,11 @@
 package com.simpleclouddisk.mapper;
 
+import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.entity.FileShard;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
 * @author Administrator
@@ -12,6 +15,8 @@ import org.apache.ibatis.annotations.Mapper;
 */
 @Mapper
 public interface FileShardMapper extends BaseMapper<FileShard> {
+
+    List<UploadRecordsDto> uploadProgress(Long userId);
 
 }
 

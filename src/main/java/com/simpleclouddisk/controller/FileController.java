@@ -68,6 +68,17 @@ public class FileController {
     }
 
     /**
+     * 判断文件分片是否存在
+     * @param shardMd5
+     * @return
+     */
+    @GetMapping("/shardMd5/{shardMd5}")
+    public Result shardExist(@PathVariable String shardMd5){
+        boolean bool = fileService.shardExist(shardMd5);
+        return Result.ok(bool);
+    }
+
+    /**
      * 在线预览
      * @return
      * @throws Exception

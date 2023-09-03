@@ -43,4 +43,5 @@ public interface FileService extends IService<FileInfo> {
 
     Map fileExist(String fileMd5);
 
+    boolean shardExist(String shardMd5);
 }

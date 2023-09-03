@@ -32,7 +32,7 @@ public class Test1 {
 
     @Test
     void md5() throws IOException {
-        File file = new File("E:\\视频\\游戏\\Crossfire\\Crossfire 2023.07.15 - 08.55.23.03.DVR.mp4");
+        File file = new File("E:\\视频\\游戏\\Desktop\\23.mp4");
         InputStream inputStream = new FileInputStream(file);
         String s = DigestUtils.md5Hex(inputStream);
         System.out.println(s);

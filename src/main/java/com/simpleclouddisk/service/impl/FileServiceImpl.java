@@ -216,6 +216,12 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
         return map;
     }
 
+    @Override
+    public boolean shardExist(String shardMd5) {
+        FileShard fileShard = fileShardMapper.selectOne(new LambdaQueryWrapper<FileShard>().eq(FileShard::getShardMd5, shardMd5));
+        return fileShard != null;
+    }
+
     /**
      * 文件是否存在
      *

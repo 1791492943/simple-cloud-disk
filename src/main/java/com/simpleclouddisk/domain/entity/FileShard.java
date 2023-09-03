@@ -26,6 +26,11 @@ public class FileShard implements Serializable {
     private Long userId;
 
     /**
+     * 文件名
+     */
+    private String fileName;
+
+    /**
      * 分片名
      */
     private String shardName;

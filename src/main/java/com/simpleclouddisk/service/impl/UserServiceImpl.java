@@ -10,14 +10,17 @@ import com.simpleclouddisk.code.FileCode;
 import com.simpleclouddisk.config.CodeConfig;
 import com.simpleclouddisk.config.PasswordConfig;
 import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.FileInfo;
+import com.simpleclouddisk.domain.entity.FileShard;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
 import com.simpleclouddisk.exception.service.PasswordException;
 import com.simpleclouddisk.mapper.FileMapper;
+import com.simpleclouddisk.mapper.FileShardMapper;
 import com.simpleclouddisk.mapper.UserFileMapper;
 import com.simpleclouddisk.service.UserService;
 import com.simpleclouddisk.mapper.UserMapper;
@@ -55,6 +58,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private FileMapper fileMapper;
+
+    @Autowired
+    private FileShardMapper fileShardMapper;
 
     /**
      * 生成短信验证码
@@ -279,6 +285,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 释放空间
         userMapper.setSpace(userId,space * -1);
+    }
+
+    @Override
+    public List<UploadRecordsDto> uploadInfo() {
+        long userId = StpUtil.getLoginIdAsLong();
+        List<UploadRecordsDto> list = fileShardMapper.uploadProgress(userId);
+        return list;
     }
 }
 

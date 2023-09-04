@@ -58,6 +58,15 @@ public class UserFile implements Serializable {
     private Long fileSize;
 
     /**
+     * 1: 视频
+     * 2: 音频
+     * 3: 图片
+     * 4: 文档
+     * 5: 其他
+     */
+    private Integer fileCategory;
+
+    /**
      * 进入回收站时间
      */
     private Timestamp recoveryTime;

@@ -162,6 +162,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
                     .fileName(fileShardDto.getFileName())
                     .filePid(fileShardDto.getFilePid())
                     .folderType(FileCode.TYPE_FILE)
+                    .fileCategory(fileType)
                     .fileSize(file.getSize())
                     .delFlag(FileCode.DEL_NO)
                     .createTime(timestamp)

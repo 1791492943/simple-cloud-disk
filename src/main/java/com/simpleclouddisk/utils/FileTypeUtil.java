@@ -7,6 +7,7 @@ public class FileTypeUtil {
     public static final Set<String> imageExtensions = new HashSet<>();
     public static final Set<String> videoExtensions = new HashSet<>();
     public static final Set<String> musicExtensions = new HashSet<>();
+    public static final Set<String> documentExtensions = new HashSet<>();
 
     static {
         imageExtensions.add(".jpg");
@@ -45,6 +46,22 @@ public class FileTypeUtil {
         musicExtensions.add(".ape");
     }
 
+    static {
+        // 添加常见文档类型的扩展名
+        documentExtensions.add(".pdf");
+        documentExtensions.add(".doc");
+        documentExtensions.add(".docx");
+        documentExtensions.add(".ppt");
+        documentExtensions.add(".pptx");
+        documentExtensions.add(".xls");
+        documentExtensions.add(".xlsx");
+        documentExtensions.add(".txt");
+        documentExtensions.add(".rtf");
+        documentExtensions.add(".csv");
+        documentExtensions.add(".html");
+        documentExtensions.add(".xml");
+    }
+
     public static boolean isImageFile(String fileName) {
         if (fileName.length() > 1) {
             String extension = fileName.toLowerCase();
@@ -65,6 +82,14 @@ public class FileTypeUtil {
         if (fileName.length() > 1) {
             String extension = fileName.toLowerCase();
             return musicExtensions.contains(extension);
+        }
+        return false;
+    }
+
+    public static boolean isDocumentFile(String fileName) {
+        if (fileName.length() > 1) {
+            String extension = fileName.toLowerCase();
+            return documentExtensions.contains(extension);
         }
         return false;
     }

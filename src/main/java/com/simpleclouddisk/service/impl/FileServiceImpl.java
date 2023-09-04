@@ -111,34 +111,43 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
 
             // 上传minio
             String fileMinioName = MinioUtil.upload(temporaryFile, fileShardDto.getSuffixName());
+            // 删除分片信息
+            fileShardMapper.delete(new LambdaQueryWrapper<FileShard>().eq(FileShard::getFileMd5, fileShardDto.getFileMd5()));
 
             int fileType = FileCode.CATEGORY_OTHER;
             // 图片
             if(FileTypeUtil.isImageFile(fileShardDto.getSuffixName())){
                 // 图片
-                File outputThumbnailFile = new File( MinioConfig.thumbnail + "/" + fileShardDto.getFileMd5() + ".jpg"); // 缩略图输出路径
+                File outputThumbnailFile = new File( MinioConfig.thumbnail + "/" + fileShardDto.getFileMd5() + ".png"); // 缩略图输出路径
                 // 生成缩略图，设置大小为 30x30 像素
                 Thumbnails.of(temporaryFile)
                         .size(30, 30)
                         .toFile(outputThumbnailFile);
                 fileType = FileCode.CATEGORY_IMAGE;
-            }
-            // 音乐
-            if(FileTypeUtil.isMusicFile(fileShardDto.getSuffixName())){
+            }else if(FileTypeUtil.isMusicFile(fileShardDto.getSuffixName())){
+                // 音乐
                 fileType = FileCode.CATEGORY_AUDIO;
-            }
-            // 视频
-            if(FileTypeUtil.isVideoFile(fileShardDto.getSuffixName())){
+            }else if(FileTypeUtil.isVideoFile(fileShardDto.getSuffixName())){
+                // 视频
                 fileType = FileCode.CATEGORY_VIDEO;
+            }else if(FileTypeUtil.isDocumentFile(fileShardDto.getSuffixName())){
+                // 文档
+                fileType = FileCode.CATEGORY_DOCUMENTATION;
             }
+
+            long fileSize = temporaryFile.length();
+            String fileName = temporaryFile.getName();
+
+            // 删除零时文件
+            temporaryFile.delete();
 
             // 保存信息
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             FileInfo fileInfo = FileInfo.builder()
                     .fileMd5(fileShardDto.getFileMd5())
-                    .fileSize(temporaryFile.length())
+                    .fileSize(fileSize)
                     .fileName(fileMinioName)
-                    .fileCover(fileShardDto.getFileMd5() + ".jpg")
+                    .fileCover(fileShardDto.getFileMd5() + ".png")
                     .fileCategory(fileType)
                     .createTime(timestamp)
                     .updateTime(timestamp)
@@ -149,7 +158,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             UserFile userFile = UserFile.builder()
                     .userId(StpUtil.getLoginIdAsLong())
                     .fileId(fileInfo.getFileId())
-                    .minioName(temporaryFile.getName())
+                    .minioName(fileName)
                     .fileName(fileShardDto.getFileName())
                     .filePid(fileShardDto.getFilePid())
                     .folderType(FileCode.TYPE_FILE)
@@ -160,12 +169,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
                     .build();
             userFileMapper.insert(userFile);
 
-            // 删除零时文件
-            temporaryFile.delete();
-
-            // 删除分片信息
-            fileShardMapper.delete(new LambdaQueryWrapper<FileShard>().eq(FileShard::getFileMd5, fileShardDto.getFileMd5()));
-        }
+            }
 
 
     }

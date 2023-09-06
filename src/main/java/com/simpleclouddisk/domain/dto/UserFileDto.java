@@ -42,6 +42,20 @@ public class UserFileDto {
     private String filePid;
 
     /**
+     * 大小
+     */
+    private Long fileSize;
+
+    /**
+     * 1: 视频
+     * 2: 音频
+     * 3: 图片
+     * 4: 文档
+     * 5: 其他
+     */
+    private Integer fileCategory;
+
+    /**
      * 进入回收站时间
      */
     private Timestamp recoveryTime;
@@ -75,6 +89,8 @@ public class UserFileDto {
         this.minioName = userFile.getMinioName();
         this.fileName = userFile.getFileName();
         this.filePid = userFile.getFilePid().toString();
+        this.fileSize = userFile.getFileSize();
+        this.fileCategory = userFile.getFileCategory();
         this.recoveryTime = userFile.getRecoveryTime();
         this.folderType = userFile.getFolderType();
         this.delFlag = userFile.getDelFlag();

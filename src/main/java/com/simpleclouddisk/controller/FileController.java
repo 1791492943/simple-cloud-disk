@@ -2,17 +2,24 @@ package com.simpleclouddisk.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.simpleclouddisk.common.Result;
+import com.simpleclouddisk.domain.dto.DownloadListDto;
 import com.simpleclouddisk.domain.dto.FileSecondsPassDto;
 import com.simpleclouddisk.domain.dto.FileShardDto;
 import com.simpleclouddisk.exception.service.SpaceException;
 import com.simpleclouddisk.service.FileService;
 import com.simpleclouddisk.service.UserFileService;
+import io.minio.errors.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -111,9 +118,17 @@ public class FileController {
      * @param response
      * @throws Exception
      */
-    @GetMapping("/download/{fileName}")
-    public void download(@PathVariable String fileName, HttpServletResponse response) throws Exception {
-        fileService.download(fileName, response.getOutputStream());
+    @GetMapping("/download/{minioName}/{fileName}")
+    public void download(@PathVariable String minioName, @PathVariable String fileName, HttpServletResponse response) throws Exception {
+        fileService.download(minioName, fileName, response);
+    }
+
+    /**
+     * 批量下载
+     */
+    @GetMapping("/downloadList/{minioNameList}/{fileNameList}")
+    public void download(@PathVariable List<String> fileNameList, @PathVariable List<String> minioNameList, HttpServletResponse response) throws Exception{
+        fileService.downloadList(fileNameList,minioNameList,response);
     }
 
 }

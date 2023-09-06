@@ -27,4 +27,9 @@ public class FilePageDto {
 
     private Integer del;
 
+    /**
+     * 文件类型
+     */
+    private Integer category;
+
 }

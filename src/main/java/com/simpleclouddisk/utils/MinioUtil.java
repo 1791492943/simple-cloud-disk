@@ -26,6 +26,7 @@ public class MinioUtil {
 
     /**
      * 上传
+     *
      * @param file
      * @return 上传后的文件名
      */
@@ -46,7 +47,8 @@ public class MinioUtil {
 
     /**
      * 下载
-     * @param fileName 文件名
+     *
+     * @param fileName     文件名
      * @param outputStream 输出流
      */
     public static void download(String fileName, OutputStream outputStream) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
@@ -54,11 +56,27 @@ public class MinioUtil {
                 .bucket(MinioConfig.BUCKET) // 桶
                 .object(fileName) // 文件名
                 .build());
-        IOUtils.copy(object,outputStream);
+        IOUtils.copy(object, outputStream);
+    }
+
+    /**
+     * 获取文件输入流
+     *
+     * @param fileName
+     * @return
+     */
+    public static InputStream getFile(String fileName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        return minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(MinioConfig.BUCKET) // 桶
+                        .object(fileName) // 文件名
+                        .build()
+        );
     }
 
     /**
      * 预览
+     *
      * @param fileName 文件名
      * @return 预览网址
      */
@@ -73,6 +91,7 @@ public class MinioUtil {
 
     /**
      * 删除
+     *
      * @param fileName 文件名
      */
     public static void delete(String fileName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
@@ -81,6 +100,18 @@ public class MinioUtil {
                 .bucket(MinioConfig.BUCKET) // 桶
                 .object(fileName) // 文件名
                 .build());
+    }
+
+    /**
+     * 获取文件大小
+     */
+    public static Long size(String fileName) throws Exception {
+        StatObjectResponse statObjectResponse = minioClient.statObject(StatObjectArgs
+                .builder()
+                .bucket(MinioConfig.BUCKET)
+                .object(fileName)
+                .build());
+        return statObjectResponse.size();
     }
 
 }

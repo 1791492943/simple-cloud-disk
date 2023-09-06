@@ -44,6 +44,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                 .filePid(fileSecondsPassDto.getFilePid())
                 .fileName(fileSecondsPassDto.getFileName())
                 .minioName(fileSecondsPassDto.getMinioName())
+                .fileCategory(fileInfo.getFileCategory())
                 .folderType(FileCode.TYPE_FILE)
                 .fileSize(fileInfo.getFileSize())
                 .delFlag(FileCode.DEL_NO)

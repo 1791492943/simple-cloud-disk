@@ -224,7 +224,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Page<UserFile> userFilePage = userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
                 .eq(UserFile::getFilePid, filePageDto.getPid())
-                .eq(UserFile::getDelFlag,filePageDto.getDel()));
+                .eq(UserFile::getDelFlag,filePageDto.getDel())
+                .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory,filePageDto.getCategory()));
 
         Page<UserFileDto> userFileDtoPage = new Page<>();
         BeanUtils.copyProperties(userFilePage,userFileDtoPage,"records");

@@ -1,10 +1,18 @@
 package com.simpleclouddisk.service;
 
+import com.simpleclouddisk.domain.dto.DownloadListDto;
 import com.simpleclouddisk.domain.entity.FileInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import io.minio.errors.*;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,12 +44,13 @@ public interface FileService extends IService<FileInfo> {
     /**
      * 下载文件
      * @param fileName
-     * @param outputStream
      * @throws Exception
      */
-    void download(String fileName, OutputStream outputStream) throws Exception;
+    void download(String minioName, String fileName, HttpServletResponse response) throws Exception;
 
     Map fileExist(String fileMd5);
 
     boolean shardExist(String shardMd5);
+
+    void downloadList(List<String> fileNameList, List<String> minioNameList , HttpServletResponse response) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
 }

@@ -3,6 +3,9 @@ package com.simpleclouddisk.mapper;
 import com.simpleclouddisk.domain.entity.UserFile;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author Administrator
@@ -13,6 +16,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserFileMapper extends BaseMapper<UserFile> {
 
+    void restore(@Param("userFile") UserFile userFile,@Param("idList") List<Long> idList);
 }
 
 

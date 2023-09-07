@@ -249,7 +249,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserFile userFile = new UserFile();
         userFile.setRecoveryTime(timestamp);
         userFile.setDelFlag(FileCode.DEL_YES);
-//        userFileMapper.update(userFile, new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
 
         List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
 
@@ -260,19 +259,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     }
 
-    private void getFileList(List<UserFile> userFileList,List<Long> list){
+    private void getFileList(List<UserFile> userFileList, List<Long> list) {
         for (UserFile userFile : userFileList) {
-            if(userFile.getFolderType() == FileCode.TYPE_FOLDER){
+            if (userFile.getFolderType() == FileCode.TYPE_FOLDER) {
                 List<UserFile> pidAllFile = getPidAllFile(userFile.getId());
-                if(pidAllFile.size() > 0){
-                    getFileList(pidAllFile,list);
+                if (pidAllFile.size() > 0) {
+                    getFileList(pidAllFile, list);
                 }
             }
             list.add(userFile.getId());
         }
     }
 
-    private List<UserFile> getPidAllFile(Long pid){
+    private List<UserFile> getPidAllFile(Long pid) {
         return userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, StpUtil.getLoginIdAsLong()).in(UserFile::getFilePid, pid));
     }
 
@@ -294,26 +293,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public void deleteFileInfoById(List<Long> list) {
+        // 获取当前操作人信息
         long userId = StpUtil.getLoginIdAsLong();
-
+        // 构建查询
         LambdaQueryWrapper<UserFile> queryWrapper = new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, list);
 
         // 查询文件信息
         List<UserFile> userFiles = userFileMapper.selectList(queryWrapper);
 
+        List<Long> idList = new ArrayList<>();
+        getFileList(userFiles, idList);
+
+        List<UserFile> userFileList = userFileMapper.selectList(
+                new LambdaQueryWrapper<UserFile>()
+                        .eq(UserFile::getUserId, userId)
+                        .in(UserFile::getId, idList));
+
         // 计算空间
         long space = 0;
-        for (UserFile fileInfo : userFiles) {
-            if (fileInfo.getFolderType() == FileCode.TYPE_FOLDER) {
-                List<UserFile> userFiles1 = selectFolderById(fileInfo.getId());
-                if (userFiles1.size() > 0) userFiles.addAll(userFiles1);
-            } else {
-                space += fileInfo.getFileSize();
+        for (UserFile userFile : userFileList) {
+            if(userFile.getFolderType() == FileCode.TYPE_FILE){
+                space += userFile.getFileSize();
             }
         }
 
         // 删除信息
-        userFileMapper.delete(queryWrapper);
+        List<Long> ids = userFileList.stream().map(item -> item.getId()).collect(Collectors.toList());
+        userFileMapper.deleteBatchIds(ids);
 
         // 释放空间
         userMapper.setSpace(userId, space * -1);
@@ -334,13 +340,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userFile.setRecoveryTime(null);
         userFile.setDelFlag(0);
 
-        LambdaQueryWrapper<UserFile> queryWrapper = new LambdaQueryWrapper<>();
-        // 操作人
-        queryWrapper.eq(UserFile::getUserId, userId);
-        // 操作文件
-        queryWrapper.in(UserFile::getId, fileIds);
+        List<UserFile> userFiles = userFileMapper.selectList(
+                new LambdaQueryWrapper<UserFile>()
+                        .eq(UserFile::getUserId, userId)
+                        .in(UserFile::getId, fileIds));
 
-        userFileMapper.update(userFile, queryWrapper);
+        List<Long> idList = new ArrayList<>();
+        getFileList(userFiles, idList);
+
+        userFileMapper.restore(userFile, idList);
     }
 
     @Override

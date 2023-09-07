@@ -21,4 +21,14 @@
         file_pid,recovery_time,folder_type,
         del_flag,create_time,update_time
     </sql>
+    <update id="restore">
+        update user_file
+        set del_flag = #{userFile.delFlag} and recovery_time = null
+        <where>
+            <foreach collection="idList" item="id" open="id in(" separator="," close=")">
+                #{id}
+            </foreach>
+        </where>
+
+    </update>
 </mapper>

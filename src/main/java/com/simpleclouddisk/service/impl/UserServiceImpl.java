@@ -278,7 +278,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 计算空间
         long space = 0;
         for (UserFile fileInfo : userFiles) {
-            space += fileInfo.getFileSize();
+            if(fileInfo.getFolderType() == FileCode.TYPE_FOLDER){
+                List<UserFile> userFiles1 = selectFolderById(fileInfo.getId());
+                if(userFiles1.size() > 0) userFiles.addAll(userFiles1);
+            }else{
+                space += fileInfo.getFileSize();
+            }
         }
 
         // 删除信息
@@ -329,6 +334,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         userFileMapper.insert(userFile);
     }
+
+    private List<UserFile> selectFolderById(Long id){
+        List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getFilePid, id));
+        return userFiles;
+    }
+
 }
 
 

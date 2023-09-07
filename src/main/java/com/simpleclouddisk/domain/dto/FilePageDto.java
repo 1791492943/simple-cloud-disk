@@ -11,7 +11,7 @@ public class FilePageDto {
     /**
      * 父级id
      */
-    private Integer pid;
+    private Long pid;
     /**
      * 当前页
      */

@@ -32,6 +32,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -240,6 +241,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public void deleteFileById(Long[] fileIds) {
         long userId = StpUtil.getLoginIdAsLong();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -248,6 +250,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userFile.setRecoveryTime(timestamp);
         userFile.setDelFlag(FileCode.DEL_YES);
         userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
+
+        ArrayList<Long> longs = new ArrayList<>();
+        for (Long fileId : fileIds) {
+            List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getFilePid, fileId));
+
+            for (UserFile file : userFiles) {
+                if(file.getFolderType() == FileCode.TYPE_FOLDER){
+                    List<UserFile> userFiles1 = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getFilePid, file.getId()));
+                    userFiles.addAll(userFiles1);
+                }
+                longs.add(file.getId());
+            }
+        }
+        userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, longs));
     }
 
     @Override

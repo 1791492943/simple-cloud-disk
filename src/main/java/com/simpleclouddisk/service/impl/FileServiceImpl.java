@@ -251,7 +251,11 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
     @Override
     public void downloadList(List<String> fileNameList, List<String> minioNameList, HttpServletResponse response) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         response.setHeader("Content-Disposition", "attachment; filename=\"download.zip\"");
+        ZipOutputStream zipOutputStream = downloadFile(fileNameList, minioNameList, response);
+        zipOutputStream.close();
+    }
 
+    private ZipOutputStream downloadFile(List<String> fileNameList, List<String> minioNameList, HttpServletResponse response) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(response.getOutputStream()));
         InputStream inputStream;
 
@@ -280,7 +284,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             zipOutputStream.closeEntry();
             inputStream.close();
         }
-        zipOutputStream.close();
+        return zipOutputStream;
     }
 
     /**

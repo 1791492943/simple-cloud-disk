@@ -225,11 +225,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Page<UserFile> userFilePage = userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
                 .eq(UserFile::getFilePid, filePageDto.getPid())
-                .eq(UserFile::getDelFlag,filePageDto.getDel())
-                .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory,filePageDto.getCategory()));
+                .eq(UserFile::getDelFlag, filePageDto.getDel())
+                .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory, filePageDto.getCategory()));
 
         Page<UserFileDto> userFileDtoPage = new Page<>();
-        BeanUtils.copyProperties(userFilePage,userFileDtoPage,"records");
+        BeanUtils.copyProperties(userFilePage, userFileDtoPage, "records");
 
         List<UserFileDto> collect = userFilePage.getRecords()
                 .stream()
@@ -249,21 +249,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserFile userFile = new UserFile();
         userFile.setRecoveryTime(timestamp);
         userFile.setDelFlag(FileCode.DEL_YES);
-        userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
+//        userFileMapper.update(userFile, new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
+
+        List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
 
         ArrayList<Long> longs = new ArrayList<>();
-        for (Long fileId : fileIds) {
-            List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getFilePid, fileId));
+        getFileList(userFiles, longs);
 
-            for (UserFile file : userFiles) {
-                if(file.getFolderType() == FileCode.TYPE_FOLDER){
-                    List<UserFile> userFiles1 = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getFilePid, file.getId()));
-                    userFiles.addAll(userFiles1);
+        userFileMapper.update(userFile, new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, longs));
+
+    }
+
+    private void getFileList(List<UserFile> userFileList,List<Long> list){
+        for (UserFile userFile : userFileList) {
+            if(userFile.getFolderType() == FileCode.TYPE_FOLDER){
+                List<UserFile> pidAllFile = getPidAllFile(userFile.getId());
+                if(pidAllFile.size() > 0){
+                    getFileList(pidAllFile,list);
                 }
-                longs.add(file.getId());
             }
+            list.add(userFile.getId());
         }
-        userFileMapper.update(userFile,new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, longs));
+    }
+
+    private List<UserFile> getPidAllFile(Long pid){
+        return userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, StpUtil.getLoginIdAsLong()).in(UserFile::getFilePid, pid));
     }
 
     @Override
@@ -276,10 +286,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userFile.setId(id);
         userFile.setFileName(fileName);
 
-        userFileMapper.update(userFile,new LambdaUpdateWrapper<UserFile>()
-                .set(UserFile::getFileName,fileName)
-                .eq(UserFile::getId,id)
-                .eq(UserFile::getUserId,userId));
+        userFileMapper.update(userFile, new LambdaUpdateWrapper<UserFile>()
+                .set(UserFile::getFileName, fileName)
+                .eq(UserFile::getId, id)
+                .eq(UserFile::getUserId, userId));
     }
 
     @Override
@@ -294,10 +304,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 计算空间
         long space = 0;
         for (UserFile fileInfo : userFiles) {
-            if(fileInfo.getFolderType() == FileCode.TYPE_FOLDER){
+            if (fileInfo.getFolderType() == FileCode.TYPE_FOLDER) {
                 List<UserFile> userFiles1 = selectFolderById(fileInfo.getId());
-                if(userFiles1.size() > 0) userFiles.addAll(userFiles1);
-            }else{
+                if (userFiles1.size() > 0) userFiles.addAll(userFiles1);
+            } else {
                 space += fileInfo.getFileSize();
             }
         }
@@ -306,7 +316,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userFileMapper.delete(queryWrapper);
 
         // 释放空间
-        userMapper.setSpace(userId,space * -1);
+        userMapper.setSpace(userId, space * -1);
     }
 
     @Override
@@ -326,11 +336,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         LambdaQueryWrapper<UserFile> queryWrapper = new LambdaQueryWrapper<>();
         // 操作人
-        queryWrapper.eq(UserFile::getUserId,userId);
+        queryWrapper.eq(UserFile::getUserId, userId);
         // 操作文件
-        queryWrapper.in(UserFile::getId,fileIds);
+        queryWrapper.in(UserFile::getId, fileIds);
 
-        userFileMapper.update(userFile,queryWrapper);
+        userFileMapper.update(userFile, queryWrapper);
     }
 
     @Override
@@ -351,7 +361,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userFileMapper.insert(userFile);
     }
 
-    private List<UserFile> selectFolderById(Long id){
+    private List<UserFile> selectFolderById(Long id) {
         List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getFilePid, id));
         return userFiles;
     }

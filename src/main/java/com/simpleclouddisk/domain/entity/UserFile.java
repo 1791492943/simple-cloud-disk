@@ -78,6 +78,16 @@ public class UserFile implements Serializable {
     private Integer folderType;
 
     /**
+     * 文件夹下文件数量
+     */
+    private Integer folderFileNum;
+
+    /**
+     * 文件夹下的文件夹数量
+     */
+    private Integer folderNum;
+
+    /**
      * 0: 正常
      * 1: 回收站
      */

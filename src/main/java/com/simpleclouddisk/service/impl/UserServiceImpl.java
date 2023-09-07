@@ -294,6 +294,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<UploadRecordsDto> list = fileShardMapper.uploadProgress(userId);
         return list;
     }
+
+    @Override
+    public void restore(Long[] fileIds) {
+        long userId = StpUtil.getLoginIdAsLong();
+
+        UserFile userFile = new UserFile();
+        userFile.setRecoveryTime(null);
+        userFile.setDelFlag(0);
+
+        LambdaQueryWrapper<UserFile> queryWrapper = new LambdaQueryWrapper<>();
+        // 操作人
+        queryWrapper.eq(UserFile::getUserId,userId);
+        // 操作文件
+        queryWrapper.in(UserFile::getId,fileIds);
+
+        userFileMapper.update(userFile,queryWrapper);
+    }
+
+    @Override
+    public void newFolder(Long pid, String folderName) {
+        long userId = StpUtil.getLoginIdAsLong();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        UserFile userFile = UserFile.builder()
+                .userId(userId)
+                .filePid(pid)
+                .fileName(folderName)
+                .folderType(FileCode.TYPE_FOLDER)
+                .delFlag(FileCode.DEL_NO)
+                .createTime(timestamp)
+                .updateTime(timestamp)
+                .build();
+
+        userFileMapper.insert(userFile);
+    }
 }
 
 

@@ -176,7 +176,16 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
                     .createTime(timestamp)
                     .updateTime(timestamp)
                     .build();
+
+            // 保存用户文件信息
             userFileMapper.insert(userFile);
+
+            // 记录文件数量
+            if (fileShardDto.getFilePid() != 0) {
+                UserFile userFile1 = userFileMapper.selectOne(new LambdaQueryWrapper<UserFile>().eq(UserFile::getId, fileShardDto.getFilePid()));
+                userFile1.setFolderFileNum(userFile1.getFolderFileNum() + 1);
+
+            }
 
         }
 
@@ -265,7 +274,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
                 name = fileName + " (" + num + ") " + fileSuffix;
             }
             zipOutputStream.putNextEntry(new ZipEntry(name));
-            map.put(name,1);
+            map.put(name, 1);
 
             IOUtils.copy(inputStream, zipOutputStream);
             zipOutputStream.closeEntry();

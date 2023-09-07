@@ -135,4 +135,27 @@ public class UserController {
         List<UploadRecordsDto> list = userService.uploadInfo();
         return Result.ok(list);
     }
+
+    /**
+     * 还原文件列表
+     * @param fileIds
+     * @return
+     */
+    @PutMapping("/restore/{fileIds}")
+    public Result restore(@PathVariable Long[] fileIds){
+        userService.restore(fileIds);
+        return Result.ok("还原成功");
+    }
+
+    /**
+     * 新建文件夹
+     * @param pid
+     * @param folderName
+     * @return
+     */
+    @PostMapping("/newFolder/{pid}/{folderName}")
+    public Result newFolder(@PathVariable Long pid, @PathVariable String folderName){
+        userService.newFolder(pid,folderName);
+        return Result.ok("新建文件夹成功");
+    }
 }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
 import java.sql.Timestamp;
 
@@ -83,18 +84,10 @@ public class UserFileDto {
     private Timestamp updateTime;
 
     public UserFileDto(UserFile userFile) {
-        this.id = userFile.getId().toString();
-        this.userId = userFile.getUserId().toString();
-        this.fileId = userFile.getFileId().toString();
-        this.minioName = userFile.getMinioName();
-        this.fileName = userFile.getFileName();
-        this.filePid = userFile.getFilePid().toString();
-        this.fileSize = userFile.getFileSize();
-        this.fileCategory = userFile.getFileCategory();
-        this.recoveryTime = userFile.getRecoveryTime();
-        this.folderType = userFile.getFolderType();
-        this.delFlag = userFile.getDelFlag();
-        this.createTime = userFile.getCreateTime();
-        this.updateTime = userFile.getUpdateTime();
+        BeanUtils.copyProperties(userFile,this);
+        this.id =  String.valueOf(userFile.getId());
+        this.userId = String.valueOf(userFile.getUserId());
+        this.fileId = String.valueOf(userFile.getFileId());
+        this.filePid = String.valueOf(userFile.getFilePid());
     }
 }

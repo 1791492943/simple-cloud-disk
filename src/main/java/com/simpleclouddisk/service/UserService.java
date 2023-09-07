@@ -48,4 +48,8 @@ public interface UserService extends IService<User> {
     void deleteFileInfoById(List<Long> list);
 
     List<UploadRecordsDto> uploadInfo();
+
+    void restore(Long[] fileIds);
+
+    void newFolder(Long pid, String folderName);
 }

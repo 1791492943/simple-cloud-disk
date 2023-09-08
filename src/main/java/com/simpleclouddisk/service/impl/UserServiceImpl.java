@@ -13,8 +13,6 @@ import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
-import com.simpleclouddisk.domain.entity.FileInfo;
-import com.simpleclouddisk.domain.entity.FileShard;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
@@ -221,19 +219,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Page page(FilePageDto filePageDto) {
-        Page<UserFile> page = new Page<>(filePageDto.getPageNum(), filePageDto.getPageSize());
-        Page<UserFile> userFilePage = userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
+        Page<UserFile> page = new Page<>(filePageDto.getPageNum(), -1);
+        userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
-                .eq(UserFile::getFilePid, filePageDto.getPid())
+                .eq(filePageDto.getDel() != FileCode.DEL_YES, UserFile::getFilePid, filePageDto.getPid())
                 .eq(UserFile::getDelFlag, filePageDto.getDel())
-                .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory, filePageDto.getCategory()));
+                .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory, filePageDto.getCategory())
+                .orderByDesc(UserFile::getCreateTime));
 
         Page<UserFileDto> userFileDtoPage = new Page<>();
-        BeanUtils.copyProperties(userFilePage, userFileDtoPage, "records");
+        BeanUtils.copyProperties(page, userFileDtoPage, "records");
 
-        List<UserFileDto> collect = userFilePage.getRecords()
+        List<UserFileDto> collect = page.getRecords()
                 .stream()
-                .map(item -> new UserFileDto(item))
+                .map(UserFileDto::new)
+//                .skip((filePageDto.getPageNum() - 1) * filePageDto.getPageSize())
+//                .limit(filePageDto.getPageSize())
                 .collect(Collectors.toList());
 
         userFileDtoPage.setRecords(collect);
@@ -249,14 +250,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserFile userFile = new UserFile();
         userFile.setRecoveryTime(timestamp);
         userFile.setDelFlag(FileCode.DEL_YES);
+        // 删除后的文件直接进入根目录
+        userFile.setFilePid(0L);
 
         List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, fileIds));
 
         ArrayList<Long> longs = new ArrayList<>();
         getFileList(userFiles, longs);
 
-        userFileMapper.update(userFile, new LambdaQueryWrapper<UserFile>().eq(UserFile::getUserId, userId).in(UserFile::getId, longs));
+        // 进入回收站
+        userFileMapper.update(userFile, new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getUserId, userId)
+                .in(UserFile::getId, longs));
 
+        // 直接清空回收站的文件夹
+        userFileMapper.delete(new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getUserId, userId)
+                .eq(UserFile::getFolderType, FileCode.TYPE_FOLDER)
+                .eq(UserFile::getDelFlag, FileCode.DEL_YES));
     }
 
     private void getFileList(List<UserFile> userFileList, List<Long> list) {
@@ -312,7 +323,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 计算空间
         long space = 0;
         for (UserFile userFile : userFileList) {
-            if(userFile.getFolderType() == FileCode.TYPE_FILE){
+            if (userFile.getFolderType() == FileCode.TYPE_FILE) {
                 space += userFile.getFileSize();
             }
         }
@@ -367,6 +378,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .build();
 
         userFileMapper.insert(userFile);
+    }
+
+    @Override
+    public List<UserFileDto> search(String name) {
+        long userId = StpUtil.getLoginIdAsLong();
+        List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getUserId, userId)
+                .like(UserFile::getFileName, name)
+                .eq(UserFile::getFolderType, FileCode.TYPE_FILE));
+
+        List<UserFileDto> collect = userFiles.stream().map(UserFileDto::new).collect(Collectors.toList());
+
+        return collect;
+    }
+
+    @Override
+    public void move(List<Long> ids, Long pid) {
+        long userId = StpUtil.getLoginIdAsLong();
+
+        UserFile userFile = new UserFile();
+        userFile.setFilePid(pid);
+
+        userFileMapper.update(userFile, new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getUserId, userId)
+                .in(UserFile::getId, ids));
+    }
+
+    @Override
+    public List<UserFileDto> folder(Long pid) {
+        long userId = StpUtil.getLoginIdAsLong();
+
+        List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getUserId, userId)
+                .eq(UserFile::getFilePid, pid)
+                .eq(UserFile::getFolderType,FileCode.TYPE_FOLDER));
+
+        List<UserFileDto> collect = userFiles.stream().map(UserFileDto::new).collect(Collectors.toList());
+
+        return collect;
     }
 
     private List<UserFile> selectFolderById(Long id) {

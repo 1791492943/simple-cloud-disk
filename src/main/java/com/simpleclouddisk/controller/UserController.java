@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.common.Result;
 import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
+import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
+import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
 import com.simpleclouddisk.service.UserFileService;
 import com.simpleclouddisk.service.UserService;
@@ -157,5 +159,39 @@ public class UserController {
     public Result newFolder(@PathVariable Long pid, @PathVariable String folderName){
         userService.newFolder(pid,folderName);
         return Result.ok("新建文件夹成功");
+    }
+
+    /**
+     * 搜索文件
+     * @param name
+     * @return
+     */
+    @GetMapping("/search/{name}")
+    public Result search(@PathVariable String name){
+        List<UserFileDto> userFileDtoList = userService.search(name);
+        return Result.ok(userFileDtoList);
+    }
+
+    /**
+     * 移动文件
+     * @param ids
+     * @param pid
+     * @return
+     */
+    @PutMapping("/move/{ids}/{pid}")
+    public Result move(@PathVariable List<Long> ids, @PathVariable Long pid){
+        userService.move(ids,pid);
+        return Result.ok("移动成功");
+    }
+
+    /**
+     * 查询文件夹
+     * @param pid
+     * @return
+     */
+    @GetMapping("/folder/{pid}")
+    public Result folder(@PathVariable Long pid){
+        List<UserFileDto> folder = userService.folder(pid);
+        return Result.ok(folder);
     }
 }

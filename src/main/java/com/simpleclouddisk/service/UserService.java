@@ -3,9 +3,11 @@ package com.simpleclouddisk.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
+import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
 
 import java.util.List;
@@ -52,4 +54,10 @@ public interface UserService extends IService<User> {
     void restore(Long[] fileIds);
 
     void newFolder(Long pid, String folderName);
+
+    List<UserFileDto> search(String name);
+
+    void move(List<Long> ids, Long pid);
+
+    List<UserFileDto> folder(Long pid);
 }

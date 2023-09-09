@@ -139,6 +139,27 @@ public class UserController {
     }
 
     /**
+     * 删除分片信息
+     * @param md5
+     * @return
+     */
+    @DeleteMapping("/deleteShardByMd5/{md5}")
+    public Result deleteShardByMd5(@PathVariable String md5){
+        userService.deleteShardByMd5(md5);
+        return Result.ok("删除成功");
+    }
+
+    /**
+     * 查看未完成文件数量
+     * @return
+     */
+    @GetMapping("/shardNum")
+    public Result shardNum(){
+        long num = userService.shardNum();
+        return Result.ok(num);
+    }
+
+    /**
      * 还原文件列表
      * @param fileIds
      * @return

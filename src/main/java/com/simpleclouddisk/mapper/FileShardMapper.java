@@ -18,6 +18,7 @@ public interface FileShardMapper extends BaseMapper<FileShard> {
 
     List<UploadRecordsDto> uploadProgress(Long userId);
 
+    Long shardCount(Long userId);
 }
 
 

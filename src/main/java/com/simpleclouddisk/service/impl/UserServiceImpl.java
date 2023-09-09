@@ -9,10 +9,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.simpleclouddisk.code.FileCode;
 import com.simpleclouddisk.config.CodeConfig;
 import com.simpleclouddisk.config.PasswordConfig;
+import com.simpleclouddisk.config.ProjectConfig;
 import com.simpleclouddisk.domain.dto.FilePageDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
+import com.simpleclouddisk.domain.entity.FileShard;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
@@ -107,6 +109,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             User userRegister = new User();
             userRegister.setPhone(userLoginDto.getPhone());
+            userRegister.setTotalSpace(ProjectConfig.space);
 
             userMapper.insert(userRegister);
             StpUtil.login(userRegister.getUserId());
@@ -222,7 +225,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Page<UserFile> page = new Page<>(filePageDto.getPageNum(), -1);
         userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
-                .eq(filePageDto.getDel() != FileCode.DEL_YES, UserFile::getFilePid, filePageDto.getPid())
+                .eq((filePageDto.getDel() != FileCode.DEL_YES && filePageDto.getCategory() == 0), UserFile::getFilePid, filePageDto.getPid())
                 .eq(UserFile::getDelFlag, filePageDto.getDel())
                 .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory, filePageDto.getCategory())
                 .orderByDesc(UserFile::getCreateTime));
@@ -417,6 +420,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<UserFileDto> collect = userFiles.stream().map(UserFileDto::new).collect(Collectors.toList());
 
         return collect;
+    }
+
+    @Override
+    public void deleteShardByMd5(String md5) {
+        long userId = StpUtil.getLoginIdAsLong();
+        int num = fileShardMapper.delete(new LambdaQueryWrapper<FileShard>()
+                .eq(FileShard::getUserId, userId)
+                .eq(FileShard::getFileMd5, md5));
+
+        userMapper.setSpace(userId, num * 1024 * 1024 * 5 * -1);
+    }
+
+    @Override
+    public long shardNum() {
+        long userId = StpUtil.getLoginIdAsLong();
+        Long num = fileShardMapper.shardCount(userId);
+        return num;
     }
 
     private List<UserFile> selectFolderById(Long id) {

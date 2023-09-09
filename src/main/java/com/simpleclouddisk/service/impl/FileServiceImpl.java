@@ -184,7 +184,6 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             if (fileShardDto.getFilePid() != 0) {
                 UserFile userFile1 = userFileMapper.selectOne(new LambdaQueryWrapper<UserFile>().eq(UserFile::getId, fileShardDto.getFilePid()));
                 userFile1.setFolderFileNum(userFile1.getFolderFileNum() + 1);
-
             }
 
         }
@@ -224,6 +223,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
     @Override
     public void download(String minioName, String fileName, HttpServletResponse response) throws Exception {
         Long size = MinioUtil.size(minioName);
+        fileName = URLEncoder.encode(fileName, "UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         response.setHeader("Content-Length", size.toString());
 
@@ -307,8 +307,8 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
     private boolean FileShardExist(FileShardDto fileShard) {
         LambdaQueryWrapper<FileShard> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FileShard::getShardMd5, fileShard.getShardMd5());
-        FileShard fs = fileShardMapper.selectOne(queryWrapper);
-        return Objects.nonNull(fs);
+        List<FileShard> fileShards = fileShardMapper.selectList(queryWrapper);
+        return fileShards.size() > 0;
     }
 
 }

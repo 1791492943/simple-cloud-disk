@@ -7,7 +7,6 @@ import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
 
 import java.util.List;
@@ -40,7 +39,6 @@ public interface UserService extends IService<User> {
 
     Map<String, Long> getSpace();
 
-
     Page page(FilePageDto filePageDto);
 
     void deleteFileById(Long[] fileIds);
@@ -60,4 +58,8 @@ public interface UserService extends IService<User> {
     void move(List<Long> ids, Long pid);
 
     List<UserFileDto> folder(Long pid);
+
+    void deleteShardByMd5(String md5);
+
+    long shardNum();
 }

@@ -26,4 +26,13 @@
         WHERE user_id = #{userId}
         GROUP BY file_md5, file_name, total_shards
     </select>
+    <select id="shardCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM (
+                 SELECT DISTINCT file_md5
+                 FROM file_shard
+                 WHERE user_id = #{userId}
+             ) as t1;
+    </select>
+
 </mapper>

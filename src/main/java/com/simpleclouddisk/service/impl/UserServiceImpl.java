@@ -228,6 +228,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq((filePageDto.getDel() != FileCode.DEL_YES && filePageDto.getCategory() == 0), UserFile::getFilePid, filePageDto.getPid())
                 .eq(UserFile::getDelFlag, filePageDto.getDel())
                 .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory, filePageDto.getCategory())
+                .orderByAsc(UserFile::getFolderType)
                 .orderByDesc(UserFile::getCreateTime));
 
         Page<UserFileDto> userFileDtoPage = new Page<>();

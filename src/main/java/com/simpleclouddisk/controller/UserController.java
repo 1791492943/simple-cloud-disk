@@ -9,11 +9,8 @@ import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
 import com.simpleclouddisk.domain.entity.User;
-import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
-import com.simpleclouddisk.service.UserFileService;
 import com.simpleclouddisk.service.UserService;
-import com.simpleclouddisk.utils.UserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,9 +25,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private UserFileService userFileService;
 
     /**
      * 生成短信验证码

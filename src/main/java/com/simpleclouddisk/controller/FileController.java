@@ -8,15 +8,11 @@ import com.simpleclouddisk.domain.dto.FileShardDto;
 import com.simpleclouddisk.exception.service.SpaceException;
 import com.simpleclouddisk.service.FileService;
 import com.simpleclouddisk.service.UserFileService;
-import io.minio.errors.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

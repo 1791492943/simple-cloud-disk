@@ -2,9 +2,8 @@ package com.simpleclouddisk.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.simpleclouddisk.common.Result;
-import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.FileListDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
@@ -48,6 +47,16 @@ public class UserController {
     }
 
     /**
+     * 退出登录
+     * @return
+     */
+    @PostMapping("/logout")
+    public Result logout(){
+        StpUtil.logout();
+        return Result.ok("退出登录");
+    }
+
+    /**
      * 获取当前登陆人id
      * @return
      */
@@ -78,14 +87,14 @@ public class UserController {
     }
 
     /**
-     * 分页查看文件列表
-     * @param filePageDto
+     * 查看文件列表
+     * @param fileListDto
      * @return
      */
-    @GetMapping("/file/page")
-    public Result filePage(FilePageDto filePageDto){
-        Page page = userService.page(filePageDto);
-        return Result.ok(page);
+    @GetMapping("/file/list")
+    public Result fileList(FileListDto fileListDto){
+        List<UserFileDto> list = userService.list(fileListDto);
+        return Result.ok(list);
     }
 
     /**
@@ -209,4 +218,5 @@ public class UserController {
         List<UserFileDto> folder = userService.folder(pid);
         return Result.ok(folder);
     }
+
 }

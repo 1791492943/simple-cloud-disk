@@ -1,7 +1,6 @@
 package com.simpleclouddisk.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.FileListDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
@@ -39,7 +38,7 @@ public interface UserService extends IService<User> {
 
     Map<String, Long> getSpace();
 
-    Page page(FilePageDto filePageDto);
+    List<UserFileDto> list(FileListDto fileListDto);
 
     void deleteFileById(Long[] fileIds);
 

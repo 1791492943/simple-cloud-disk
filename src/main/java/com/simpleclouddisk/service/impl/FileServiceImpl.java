@@ -180,12 +180,6 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileInfo> implement
             // 保存用户文件信息
             userFileMapper.insert(userFile);
 
-            // 记录文件数量
-            if (fileShardDto.getFilePid() != 0) {
-                UserFile userFile1 = userFileMapper.selectOne(new LambdaQueryWrapper<UserFile>().eq(UserFile::getId, fileShardDto.getFilePid()));
-                userFile1.setFolderFileNum(userFile1.getFolderFileNum() + 1);
-            }
-
         }
 
 

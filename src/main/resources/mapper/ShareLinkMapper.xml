@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleclouddisk.mapper.ShareLinkMapper">
+
+    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.entity.ShareLink">
+            <id property="linkId" column="link_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="shareLink" column="share_link" jdbcType="VARCHAR"/>
+            <result property="visitNum" column="visit_num" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="expiryTime" column="expiry_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        link_id,user_id,share_link,
+        visit_num,create_time,expiry_time
+    </sql>
+</mapper>

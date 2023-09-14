@@ -1,6 +1,7 @@
 package com.simpleclouddisk;
 
 import cn.dev33.satoken.secure.BCrypt;
+import com.alibaba.fastjson.JSON;
 import com.mysql.cj.log.Log;
 import com.simpleclouddisk.domain.dto.DownloadListDto;
 import com.simpleclouddisk.utils.MinioUtil;
@@ -22,8 +23,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -56,6 +59,19 @@ public class Test1 {
     }
 
     @Test
+    void page(){
+        List<Integer> list = Arrays.asList(1,2,3,4,5,6,7,8,9,10);
+
+        String jsonString = JSON.toJSONString(list);
+
+        redisTemplate.opsForValue().set("1",jsonString);
+
+        String s = redisTemplate.opsForValue().get("1");
+        List list1 = JSON.parseObject(s, List.class);
+        System.out.println(list1);
+    }
+
+    @Test
     void downloadFile() throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         List<DownloadListDto> fileList = new ArrayList<>();
         DownloadListDto downloadListDto = new DownloadListDto();
@@ -84,4 +100,25 @@ public class Test1 {
         }
     }
 
+    public static void main(String[] args) throws Exception {
+        String aaa = aaa();
+        System.out.println(aaa);
+    }
+
+    public static String aaa(){
+        System.out.println("查询");
+
+        new Thread(() -> {
+            try {
+                System.out.println("redis 开始存数据");
+                Thread.sleep(10000);
+                System.out.println("redis 存完数据");
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+
+        System.out.println("查询结束");
+        return "内容";
+    }
 }

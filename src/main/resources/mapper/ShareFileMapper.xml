@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleclouddisk.mapper.ShareFileMapper">
+
+    <resultMap id="BaseResultMap" type="com.simpleclouddisk.domain.entity.ShareFile">
+            <id property="shareId" column="share_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+            <result property="sharedFromFolderId" column="shared_from_folder_id" jdbcType="BIGINT"/>
+            <result property="linkId" column="link_id" jdbcType="BIGINT"/>
+            <result property="minioName" column="minio_name" jdbcType="VARCHAR"/>
+            <result property="fileName" column="file_name" jdbcType="VARCHAR"/>
+            <result property="fileSize" column="file_size" jdbcType="BIGINT"/>
+            <result property="fileCategory" column="file_category" jdbcType="INTEGER"/>
+            <result property="folderType" column="folder_type" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        share_id,user_id,file_id,
+        shared_from_folder_id,link_id,minio_name,
+        file_name,file_size,file_category,
+        folder_type
+    </sql>
+</mapper>

@@ -4,13 +4,12 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.simpleclouddisk.code.FileCode;
 import com.simpleclouddisk.config.CodeConfig;
 import com.simpleclouddisk.config.PasswordConfig;
 import com.simpleclouddisk.config.ProjectConfig;
-import com.simpleclouddisk.domain.dto.FilePageDto;
+import com.simpleclouddisk.domain.dto.FileListDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
@@ -18,8 +17,7 @@ import com.simpleclouddisk.domain.entity.FileShard;
 import com.simpleclouddisk.domain.entity.User;
 import com.simpleclouddisk.domain.entity.UserFile;
 import com.simpleclouddisk.exception.ServiceException;
-import com.simpleclouddisk.exception.service.PasswordException;
-import com.simpleclouddisk.mapper.FileMapper;
+import com.simpleclouddisk.exception.service.LoginException;
 import com.simpleclouddisk.mapper.FileShardMapper;
 import com.simpleclouddisk.mapper.UserFileMapper;
 import com.simpleclouddisk.service.UserService;
@@ -28,7 +26,6 @@ import com.simpleclouddisk.utils.CaptchaGenerator;
 import com.simpleclouddisk.utils.RedisUtil;
 import com.simpleclouddisk.utils.UserUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -58,9 +55,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserFileMapper userFileMapper;
 
     @Autowired
-    private FileMapper fileMapper;
-
-    @Autowired
     private FileShardMapper fileShardMapper;
 
     /**
@@ -87,10 +81,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public String login(UserLoginDto userLoginDto) throws ServiceException {
+        // 构建用户对象
         User user = new User();
         user.setPhone(userLoginDto.getPhone());
         user.setPassword(userLoginDto.getPassword());
-
+        // 查询用户
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getPhone, user.getPhone());
         User userInfo = userMapper.selectOne(queryWrapper);
@@ -98,17 +93,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 账号不存在,直接注册
         if (Objects.isNull(userInfo)) {
             if (userLoginDto.getCode() == null || "".equals(userLoginDto.getCode())) {
-                throw new ServiceException("账号未注册");
+                throw new LoginException("账号未注册");
             }
 
             String redisPhone = RedisUtil.redisPhoneCode(userLoginDto.getPhone());
             String code = redisTemplate.opsForValue().get(redisPhone);
             if (!userLoginDto.getCode().equals(code)) {
-                throw new ServiceException("验证码错误");
+                throw new LoginException("验证码错误");
             }
 
+            // 账号未注册使用验证码直接注册
             User userRegister = new User();
             userRegister.setPhone(userLoginDto.getPhone());
+            userRegister.setTotalSpace(ProjectConfig.space);
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            userRegister.setCreateTime(timestamp);
+            userRegister.setLastTime(timestamp);
             userRegister.setTotalSpace(ProjectConfig.space);
 
             userMapper.insert(userRegister);
@@ -119,8 +119,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return token;
         }
 
+        // 账号存在,验证码登录
         if (userLoginDto.getCode() != null && !"".equals(userLoginDto.getCode())) {
-            // 验证码登录
             String redisPhone = RedisUtil.redisPhoneCode(userInfo.getPhone());
             String code = redisTemplate.opsForValue().get(redisPhone);
             if (userLoginDto.getCode() != null && userLoginDto.getCode().equals(code)) {
@@ -134,37 +134,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 redisTemplate.opsForValue().getOperations().delete(redisPhone);
                 return token;
             }
-        } else if (userLoginDto.getPassword() != null && !"".equals(userLoginDto.getPassword())) {
-            // 密码登录
+        }
+        // 密码登录
+        else if (userLoginDto.getPassword() != null && !"".equals(userLoginDto.getPassword())) {
+            // 查询 redis 密码错误次数
+            String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
+            String count = redisTemplate.opsForValue().get(redisUserId);
+            if ("-1".equals(count)) {
+                throw new LoginException("账号已被锁定,请等待 " + redisTemplate.opsForValue().getOperations().getExpire(redisUserId) + " 秒后再次尝试");
+            }
+
             // 密码错误
-            System.out.println(BCrypt.checkpw(user.getPassword(), userInfo.getPassword()));
             if (!BCrypt.checkpw(user.getPassword(), userInfo.getPassword())) {
-                // 查询 redis 密码错误次数
-                String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
-                String count = redisTemplate.opsForValue().get(redisUserId);
-
-                if ("-1".equals(count)) {
-                    throw new ServiceException("账号已被锁定,请等待 " + redisTemplate.opsForValue().getOperations().getExpire(redisUserId) + " 秒后再次尝试");
-                }
-
                 // 第一次密码错误
                 if (Objects.isNull(count)) {
-                    // 密码错误累加
+                    // 密码错误次数设为 1
                     redisTemplate.opsForValue().set(redisUserId, "1", PasswordConfig.TIME, TimeUnit.MINUTES);
-                    throw new PasswordException("密码错误,你还有 " + (PasswordConfig.COUNT - 1) + " 次机会");
+                    throw new LoginException("密码错误,你还有 " + (PasswordConfig.COUNT - 1) + " 次机会");
                 }
 
                 // 多次密码错误
                 int countAdd = Integer.parseInt(count) + 1;
-                // 密码错误次数达到上限 锁定10分钟 -1 表示上限
-                if (countAdd == PasswordConfig.COUNT) {
-                    redisTemplate.opsForValue().set(redisUserId, "-1", PasswordConfig.TIME, TimeUnit.MINUTES);
-                    throw new PasswordException("账号已被锁定 " + PasswordConfig.TIME + " 分钟");
-                }
-                // 密码错误没有达到上限 次数加 1
-                redisTemplate.opsForValue().set(redisUserId, String.valueOf(countAdd), PasswordConfig.TIME, TimeUnit.MINUTES);
-                throw new PasswordException("密码错误,你还有 " + (PasswordConfig.COUNT - countAdd) + " 次机会");
 
+                redisTemplate.opsForValue().set(redisUserId, String.valueOf(countAdd), PasswordConfig.TIME, TimeUnit.MINUTES);
+
+                if(countAdd >= PasswordConfig.COUNT){
+                    redisTemplate.opsForValue().set(redisUserId, "-1", PasswordConfig.TIME, TimeUnit.MINUTES);
+                    throw new LoginException("账号已被锁定,请等待 " + redisTemplate.opsForValue().getOperations().getExpire(redisUserId) + " 秒后再次尝试");
+                }
+                throw new LoginException("密码错误,你还有 " + (PasswordConfig.COUNT - countAdd) + " 次机会");
             }
 
             // 登录成功
@@ -172,8 +170,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             String token = StpUtil.getTokenValue();
 
             // 清空密码累计次数
-            String redisUserId = RedisUtil.redisPasswordCount(userInfo.getUserId());
-            redisTemplate.opsForValue().set(redisUserId, "0");
+            redisTemplate.delete(redisUserId);
 
             // 设置最后登录时间
             userInfo.setLastTime(new Timestamp(System.currentTimeMillis()));
@@ -221,28 +218,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Page page(FilePageDto filePageDto) {
-        Page<UserFile> page = new Page<>(filePageDto.getPageNum(), -1);
-        userFileMapper.selectPage(page, new LambdaQueryWrapper<UserFile>()
+    public List<UserFileDto> list(FileListDto fileListDto) {
+        List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
-                .eq((filePageDto.getDel() != FileCode.DEL_YES && filePageDto.getCategory() == 0), UserFile::getFilePid, filePageDto.getPid())
-                .eq(UserFile::getDelFlag, filePageDto.getDel())
-                .eq(filePageDto.getCategory() != 0, UserFile::getFileCategory, filePageDto.getCategory())
+                .eq((fileListDto.getDel() != FileCode.DEL_YES && fileListDto.getCategory() == 0), UserFile::getFilePid, fileListDto.getPid())
+                .eq(UserFile::getDelFlag, fileListDto.getDel())
+                .eq(fileListDto.getCategory() != 0, UserFile::getFileCategory, fileListDto.getCategory())
                 .orderByAsc(UserFile::getFolderType)
                 .orderByDesc(UserFile::getCreateTime));
 
-        Page<UserFileDto> userFileDtoPage = new Page<>();
-        BeanUtils.copyProperties(page, userFileDtoPage, "records");
-
-        List<UserFileDto> collect = page.getRecords()
+        List<UserFileDto> collect = userFiles
                 .stream()
                 .map(UserFileDto::new)
-//                .skip((filePageDto.getPageNum() - 1) * filePageDto.getPageSize())
-//                .limit(filePageDto.getPageSize())
+                .sorted((o1, o2) -> {
+                    // 类型相同
+                    if (o1.getFolderType() == o2.getFolderType()) {
+                        if (o1.getFolderType() == FileCode.TYPE_FOLDER) {
+                            // 文件夹升序
+                            return (int) (o1.getCreateTime().toInstant().toEpochMilli() - o2.getCreateTime().toInstant().toEpochMilli());
+                        } else {
+                            // 文件降序
+                            return (int) (o2.getCreateTime().toInstant().toEpochMilli() - o1.getCreateTime().toInstant().toEpochMilli());
+                        }
+                    }
+
+                    return o1.getFolderType() - o2.getFolderType();
+                })
                 .collect(Collectors.toList());
 
-        userFileDtoPage.setRecords(collect);
-        return userFileDtoPage;
+        return collect;
     }
 
     @Override
@@ -416,7 +420,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, userId)
                 .eq(UserFile::getFilePid, pid)
-                .eq(UserFile::getFolderType,FileCode.TYPE_FOLDER));
+                .eq(UserFile::getFolderType, FileCode.TYPE_FOLDER));
 
         List<UserFileDto> collect = userFiles.stream().map(UserFileDto::new).collect(Collectors.toList());
 

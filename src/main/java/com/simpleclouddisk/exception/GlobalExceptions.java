@@ -1,6 +1,7 @@
 package com.simpleclouddisk.exception;
 
 import com.simpleclouddisk.common.Result;
+import com.simpleclouddisk.exception.service.LoginException;
 import com.simpleclouddisk.exception.service.SpaceException;
 import com.simpleclouddisk.utils.HttpCode;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,6 +13,14 @@ public class GlobalExceptions {
     @ExceptionHandler(SpaceException.class)
     public Result spaceException(SpaceException e) {
         return Result.error(e.getMessage(),HttpCode.SPACE_OVERFLOW);
+    }
+
+    @ExceptionHandler(LoginException.class)
+    public Result loginException(LoginException e){
+        Result result = new Result();
+        result.setMsg(e.getMessage());
+        result.setCode(HttpCode.LOGIN_FAIL);
+        return result;
     }
 
     @ExceptionHandler(ServiceException.class)

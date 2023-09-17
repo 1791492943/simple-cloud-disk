@@ -17,6 +17,12 @@ public class PreviewController {
     @Autowired
     private PreviewService previewService;
 
+    /**
+     * 获取图片缩略图
+     * @param fileId
+     * @param response
+     * @throws IOException
+     */
     @GetMapping("/thumbnail/{fileId}")
     public void thumbnail(@PathVariable String fileId, HttpServletResponse response) throws IOException {
         long id = Long.parseLong(fileId);

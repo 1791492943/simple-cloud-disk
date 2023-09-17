@@ -10,9 +10,9 @@ public class FileListDto {
     private Long pid;
 
     /**
-     * 回收站
+     * 页面
      */
-    private Integer del;
+    private Integer page;
 
     /**
      * 文件类型

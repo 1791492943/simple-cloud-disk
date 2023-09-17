@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Date;
 import lombok.Data;
 
@@ -37,14 +38,19 @@ public class ShareLink implements Serializable {
     private Long visitNum;
 
     /**
+     * 密码
+     */
+    private String code;
+
+    /**
      * 分享时间
      */
-    private Date createTime;
+    private Timestamp createTime;
 
     /**
      * 到期时间
      */
-    private Date expiryTime;
+    private Timestamp expiryTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

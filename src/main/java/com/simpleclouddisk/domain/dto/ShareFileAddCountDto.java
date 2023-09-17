@@ -1,49 +1,38 @@
-package com.simpleclouddisk.domain.entity;
+package com.simpleclouddisk.domain.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
-import java.io.Serializable;
-import java.sql.Timestamp;
-
+import com.simpleclouddisk.domain.entity.ShareFile;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 
-/**
- * @TableName share_file
- */
-@TableName(value = "share_file")
+import java.sql.Timestamp;
+
 @Data
-@NoArgsConstructor
-public class ShareFile implements Serializable {
+public class ShareFileAddCountDto {
+
     /**
      * 文件被分享的id
      */
-    @TableId
-    private Long shareId;
+    private String shareId;
 
     /**
      * 用户id
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 文件id
      */
-    private Long fileId;
+    private String fileId;
 
     /**
      * 父id
      */
-    private Long filePid;
+    private String filePid;
 
     /**
      * 链接id
      */
-    private Long linkId;
+    private String linkId;
 
     /**
      * minio名称
@@ -85,10 +74,14 @@ public class ShareFile implements Serializable {
      */
     private Timestamp expiryTime;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private Long count;
 
-    public ShareFile(UserFile userFile) {
-        BeanUtils.copyProperties(userFile,this);
+    public ShareFileAddCountDto(ShareFile shareFile) {
+        BeanUtils.copyProperties(shareFile, this);
+        this.shareId = shareFile.getShareId().toString();
+        this.userId = shareFile.getUserId().toString();
+        this.fileId = shareFile.getFileId().toString();
+        this.filePid = shareFile.getFilePid().toString();
+        this.linkId = shareFile.getLinkId().toString();
     }
 }

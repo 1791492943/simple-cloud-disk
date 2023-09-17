@@ -1,13 +1,15 @@
 package com.simpleclouddisk.service;
 
+import com.simpleclouddisk.domain.dto.ShareDto;
 import com.simpleclouddisk.domain.dto.ShareFileDto;
 import com.simpleclouddisk.domain.entity.ShareFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.simpleclouddisk.exception.ServiceException;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author Administrator
@@ -16,9 +18,17 @@ import java.util.List;
 */
 public interface ShareFileService extends IService<ShareFile> {
 
-    String share(List<Long> fileList, Integer time);
+    Map<String, String> share(List<Long> fileList, Integer time);
 
-    List<ShareFileDto> parseUrl(String url);
+    List<ShareFileDto> parseUrl(ShareDto share) throws ServiceException;
 
     void image(Long fileId, HttpServletResponse response) throws IOException;
+
+    boolean urlExist(String url);
+
+
+    List shareList();
+
+    void unshare(List<Long> ids);
+
 }

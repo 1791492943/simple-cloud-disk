@@ -7,6 +7,8 @@ import com.simpleclouddisk.domain.entity.UserFile;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
+import java.sql.Timestamp;
+
 @Data
 public class ShareFileDto {
 
@@ -64,6 +66,16 @@ public class ShareFileDto {
      * 1: 文件
      */
     private Integer folderType;
+
+    /**
+     * 分享时间
+     */
+    private Timestamp createTime;
+
+    /**
+     * 到期时间
+     */
+    private Timestamp expiryTime;
 
     public ShareFileDto(ShareFile shareFile) {
         BeanUtils.copyProperties(shareFile, this);

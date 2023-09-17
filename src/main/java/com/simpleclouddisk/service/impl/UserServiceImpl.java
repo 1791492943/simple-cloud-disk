@@ -13,15 +13,11 @@ import com.simpleclouddisk.domain.dto.FileListDto;
 import com.simpleclouddisk.domain.dto.UploadRecordsDto;
 import com.simpleclouddisk.domain.dto.UserFileDto;
 import com.simpleclouddisk.domain.dto.UserLoginDto;
-import com.simpleclouddisk.domain.entity.FileShard;
-import com.simpleclouddisk.domain.entity.User;
-import com.simpleclouddisk.domain.entity.UserFile;
+import com.simpleclouddisk.domain.entity.*;
 import com.simpleclouddisk.exception.ServiceException;
 import com.simpleclouddisk.exception.service.LoginException;
-import com.simpleclouddisk.mapper.FileShardMapper;
-import com.simpleclouddisk.mapper.UserFileMapper;
+import com.simpleclouddisk.mapper.*;
 import com.simpleclouddisk.service.UserService;
-import com.simpleclouddisk.mapper.UserMapper;
 import com.simpleclouddisk.utils.CaptchaGenerator;
 import com.simpleclouddisk.utils.RedisUtil;
 import com.simpleclouddisk.utils.UserUtil;
@@ -56,6 +52,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private FileShardMapper fileShardMapper;
+
+    @Autowired
+    private ShareLinkMapper shareLinkMapper;
+
+    @Autowired
+    private ShareFileMapper shareFileMapper;
 
     /**
      * 生成短信验证码
@@ -221,8 +223,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public List<UserFileDto> list(FileListDto fileListDto) {
         List<UserFile> userFiles = userFileMapper.selectList(new LambdaQueryWrapper<UserFile>()
                 .eq(UserFile::getUserId, StpUtil.getLoginIdAsLong())
-                .eq((fileListDto.getDel() != FileCode.DEL_YES && fileListDto.getCategory() == 0), UserFile::getFilePid, fileListDto.getPid())
-                .eq(UserFile::getDelFlag, fileListDto.getDel())
+                .eq((fileListDto.getPage() != FileCode.DEL_YES && fileListDto.getCategory() == 0), UserFile::getFilePid, fileListDto.getPid())
+                .eq(UserFile::getDelFlag, fileListDto.getPage())
                 .eq(fileListDto.getCategory() != 0, UserFile::getFileCategory, fileListDto.getCategory())
                 .orderByAsc(UserFile::getFolderType)
                 .orderByDesc(UserFile::getCreateTime));
